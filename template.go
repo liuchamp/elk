@@ -1,7 +1,6 @@
 package elk
 
 import (
-	"embed"
 	"fmt"
 	"strings"
 	"text/template"
@@ -11,8 +10,7 @@ import (
 )
 
 var (
-	//go:embed template
-	templateDir embed.FS
+
 	// Funcs contains the extra template functions used by elk.
 	Funcs = template.FuncMap{
 		"contains":        contains,
@@ -23,15 +21,15 @@ var (
 		"kebab":           strcase.KebabCase,
 		"needsValidation": needsValidation,
 		"nodeOperations":  nodeOperations,
-		"pluralize":       rules.Pluralize,
-		"view":            newView,
-		"views":           newViews,
-		"stringSlice":     stringSlice,
-		"xextend":         xextend,
-		"zapField":        zapField,
+		//"pluralize":       rules.Pluralize,
+		"view":        newView,
+		"views":       newViews,
+		"stringSlice": stringSlice,
+		"xextend":     xextend,
+		"zapField":    zapField,
 	}
 	// HTTPTemplate holds all templates for generating http handlers.
-	HTTPTemplate = gen.MustParse(gen.NewTemplate("elk").Funcs(Funcs).ParseFS(templateDir, "template/http/*.tmpl"))
+	// HTTPTemplate = gen.MustParse(gen.NewTemplate("elk").Funcs(Funcs).ParseFS(templateDir, "template/http/*.tmpl"))
 )
 
 // filterNodes returns the nodes a handler for the given operation should be generated for.
@@ -185,7 +183,6 @@ type edgeScope struct {
 //	{{ with $scope := xextend $ "key" "value" }}
 //		{{ template "setters" $scope }}
 //	{{ end}}
-//
 func xextend(v interface{}, kv ...interface{}) (interface{}, error) {
 	scope := make(map[interface{}]interface{})
 	if len(kv)%2 != 0 {
