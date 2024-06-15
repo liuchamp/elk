@@ -1,3 +1,8 @@
 .idea
 build
 _example
+.vscode/
+*/ent/
+!*/ent/entc.go
+!*/ent/generate.go
+!*/ent/schema/

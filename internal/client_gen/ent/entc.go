@@ -4,15 +4,15 @@
 package main
 
 import (
-	"entgo.io/ent/entc"
-	"entgo.io/ent/entc/gen"
-	"github.com/deepmap/oapi-codegen/pkg/codegen"
-	"github.com/deepmap/oapi-codegen/pkg/util"
-	"github.com/masseelch/elk"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+
+	"entgo.io/ent/entc"
+	"entgo.io/ent/entc/gen"
+	"github.com/masseelch/elk"
+	"github.com/oapi-codegen/oapi-codegen/v2/pkg/codegen"
+	"github.com/oapi-codegen/oapi-codegen/v2/pkg/util"
 )
 
 func main() {
@@ -37,15 +37,19 @@ func generateClient() {
 		log.Fatalf("Failed to load swagger %v", err)
 	}
 
-	generated, err := codegen.Generate(swagger, "stub", codegen.Options{
-		GenerateChiServer:  false,
-		GenerateEchoServer: false,
-		GenerateClient:     true,
-		GenerateTypes:      true,
-		EmbedSpec:          false,
-		SkipFmt:            false,
-		SkipPrune:          false,
-		AliasTypes:         true,
+	generated, err := codegen.Generate(swagger, codegen.Configuration{
+		PackageName: "sub",
+		OutputOptions: codegen.OutputOptions{
+			SkipFmt:   false,
+			SkipPrune: false,
+			// AliasTypes: true,
+		},
+		Generate: codegen.GenerateOptions{ChiServer: false,
+			EchoServer:   false,
+			Client:       true,
+			Models:       true,
+			EmbeddedSpec: false,
+		},
 	})
 	if err != nil {
 		log.Fatalf("Generating client failed%v", err)
@@ -60,7 +64,7 @@ func generateClient() {
 		log.Fatalf("error creating dir: %s", err)
 	}
 
-	err = ioutil.WriteFile(stub, []byte(generated), perm)
+	err = os.WriteFile(stub, []byte(generated), perm)
 	if err != nil {
 		panic(err)
 		log.Fatalf("error writing generated code to file: %s", err)

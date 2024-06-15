@@ -108,8 +108,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/deepmap/oapi-codegen/pkg/codegen"
-	"github.com/deepmap/oapi-codegen/pkg/util"
+	"github.com/oapi-codegen/oapi-codegen/v2/pkg/codegen"
+	"github.com/oapi-codegen/oapi-codegen/v2/pkg/util"
 )
 
 func generateClient() {
@@ -118,10 +118,19 @@ func generateClient() {
 		log.Fatalf("Failed to load swagger %v", err)
 	}
 
-	generated, err := codegen.Generate(swagger, "stub", codegen.Options{
-		GenerateClient: true,
-		GenerateTypes:  true,
-		AliasTypes:     true,
+	generated, err := codegen.Generate(swagger, codegen.Configuration{
+		PackageName: "sub",
+		OutputOptions: codegen.OutputOptions{
+			SkipFmt:   false,
+			SkipPrune: false,
+			// AliasTypes: true,
+		},
+		Generate: codegen.GenerateOptions{ChiServer: false,
+			EchoServer:   false,
+			Client:       true,
+			Models:       true,
+			EmbeddedSpec: false,
+		},
 	})
 	if err != nil {
 		log.Fatalf("generaring client failed %s", err);
