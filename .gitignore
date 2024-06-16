@@ -6,3 +6,4 @@ _example
 !*/ent/entc.go
 !*/ent/generate.go
 !*/ent/schema/
+vendor

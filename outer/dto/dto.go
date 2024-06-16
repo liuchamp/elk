@@ -1,11 +1,9 @@
 package dto
 
 import (
-	"bytes"
 	"fmt"
+	"github.com/masseelch/elk/pkg/utils/write"
 	"go/ast"
-	"go/format"
-	"go/printer"
 	"go/token"
 	"path"
 	"path/filepath"
@@ -31,6 +29,7 @@ func DtoOuter(g *gen.Graph, pr string) error {
 }
 
 const po = "po"
+const dtoPkgName = "dto"
 
 // genDto 生成标准dto
 // 全部的dto 都生成到dto 目录， 正常输出路径 n.Config.Package/../biz/repo
@@ -40,7 +39,7 @@ func genDto(g *gen.Graph, pr string, n *gen.Type) error {
 
 	// 创建包名
 	file := &ast.File{
-		Name: ast.NewIdent("dto"),
+		Name: ast.NewIdent(dtoPkgName),
 	}
 	// 创建导入语句
 	pkgNameEntroot := filepath.Base(n.Config.Package)
@@ -72,31 +71,7 @@ func genDto(g *gen.Graph, pr string, n *gen.Type) error {
 	dtoFields = append(dtoFields, &idfInfo)
 
 	for _, field := range n.Fields {
-		fn := utils.ToCamelCase(field.Name)
-		f := &ast.Field{
-			Names: []*ast.Ident{ast.NewIdent(fn)},
-			Type:  ast.NewIdent(field.Type.String()),
-		}
-		if field.Type.Type == Tyfield2.TypeEnum { // 屏蔽路径枚举
-			pkgName := strings.SplitN(field.Type.String(), ".", 2)[0]
-			pkgPath := path.Join(n.Config.Package, pkgName)
-			astutil.AddNamedImport(fset, file, pkgName, pkgPath)
-		} else if n.ID.Type.PkgPath != "" {
-			if n.ID.Type.PkgName != "" {
-				astutil.AddNamedImport(fset, file, n.ID.Type.PkgName, n.ID.Type.PkgPath)
-			} else {
-				astutil.AddImport(fset, file, n.ID.Type.PkgPath)
-			}
-		}
-		if field.NillableValue() {
-			f.Type = &ast.StarExpr{
-				X: ast.NewIdent(field.Type.String()),
-			}
-		}
-		f.Tag = &ast.BasicLit{
-			Kind:  token.STRING,
-			Value: tag(field),
-		}
+		fn, f := funcFieldDuty(field, n, fset, file)
 		elts = append(elts, &ast.KeyValueExpr{
 			Key:   ast.NewIdent(fn),
 			Value: ast.NewIdent(po + "." + fn),
@@ -171,35 +146,37 @@ func genDto(g *gen.Graph, pr string, n *gen.Type) error {
 
 	file.Decls = append(file.Decls, funcDecl)
 	// 打印生成的代码
-	f, err := utils.CreateFileWithDirs(filepath.Join(pr, "dto", fmt.Sprintf("%s_dto.go", strings.ToLower(n.Name))))
-	if err != nil {
-		return err
+	f := filepath.Join(pr, dtoPkgName, fmt.Sprintf("%s_dto.go", strings.ToLower(n.Name)))
+	return write.WireGoFile(f, fset, file)
+}
+
+func funcFieldDuty(field *gen.Field, n *gen.Type, fset *token.FileSet, file *ast.File) (string, *ast.Field) {
+	fn := utils.ToCamelCase(field.Name)
+	f := &ast.Field{
+		Names: []*ast.Ident{ast.NewIdent(fn)},
+		Type:  ast.NewIdent(field.Type.String()),
 	}
-	defer f.Close()
-
-	// 创建一个缓冲区来存储生成的代码
-	buf := new(bytes.Buffer)
-
-	// 打印未格式化的代码到缓冲区
-	if err := printer.Fprint(buf, fset, file); err != nil {
-		return err
+	if field.Type.Type == Tyfield2.TypeEnum { // 屏蔽路径枚举
+		pkgName := strings.SplitN(field.Type.String(), ".", 2)[0]
+		pkgPath := path.Join(n.Config.Package, pkgName)
+		astutil.AddNamedImport(fset, file, pkgName, pkgPath)
+	} else if n.ID.Type.PkgPath != "" {
+		if n.ID.Type.PkgName != "" {
+			astutil.AddNamedImport(fset, file, n.ID.Type.PkgName, n.ID.Type.PkgPath)
+		} else {
+			astutil.AddImport(fset, file, n.ID.Type.PkgPath)
+		}
 	}
-
-	// 获取未格式化的代码
-	unformattedCode := buf.Bytes()
-
-	// 格式化代码
-	formattedCode, err := format.Source(unformattedCode)
-	if err != nil {
-		return err
+	if field.NillableValue() {
+		f.Type = &ast.StarExpr{
+			X: ast.NewIdent(field.Type.String()),
+		}
 	}
-
-	// 将格式化的代码写入文件
-	if _, err := f.Write(formattedCode); err != nil {
-		return err
+	f.Tag = &ast.BasicLit{
+		Kind:  token.STRING,
+		Value: tag(field),
 	}
-
-	return nil
+	return fn, f
 }
 
 func tag(n *gen.Field) string {
@@ -212,4 +189,8 @@ func tag(n *gen.Field) string {
 	})
 
 	return fmt.Sprintf("`%s`", tgs.String())
+}
+
+func GetDtoPkg(pr string) string {
+	return path.Join(pr, dtoPkgName)
 }

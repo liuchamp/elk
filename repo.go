@@ -2,6 +2,7 @@ package elk
 
 import (
 	"entgo.io/ent/entc/gen"
+	"github.com/masseelch/elk/outer/bo"
 	"github.com/masseelch/elk/outer/dto"
 	"path/filepath"
 )
@@ -31,9 +32,15 @@ func RepoGenerator(c RepoConfig) gen.Hook {
 			c.cache = filepath.Join(g.Config.Target, "repo")
 
 			// 2. 输出dto
-			dto.DtoOuter(g, c.cache)
-			// 3. 输出 vo
-
+			err := dto.DtoOuter(g, c.cache)
+			if err != nil {
+				return err
+			}
+			// 3. 输出 bo
+			err = bo.BoOuter(g, c.cache)
+			if err != nil {
+				return err
+			}
 			// 4. 输出 router
 
 			return nil
