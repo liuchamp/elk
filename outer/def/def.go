@@ -17,7 +17,6 @@ const defPkgName = consts.DefsvPkgName
 
 // DefOuter  pr 前缀
 func DefOuter(g *gen.Graph, pr string) error {
-
 	for _, n := range g.Nodes {
 		if err := DefGen(g, pr, n); err != nil {
 			return err
@@ -58,30 +57,28 @@ func DefGen(g *gen.Graph, pr string, n *gen.Type) error {
 		Tok: token.TYPE,
 		Specs: []ast.Spec{
 			&ast.TypeSpec{
-				Name: ast.NewIdent(fmt.Sprintf("%sRepo", n.Name)),
+				Name: ast.NewIdent(fmt.Sprintf("%s%s", n.Name, consts.DefRepoSuffix)),
 				Type: interfaceType,
 				Comment: &ast.CommentGroup{
 					List: []*ast.Comment{
-						{Text: fmt.Sprintf("// %sRepo is a define for opt data", n.Name)},
+						{Text: fmt.Sprintf("// %s%s is a define for opt data", n.Name, consts.DefRepoSuffix)},
 					},
 				},
 			},
 		},
 	}
-
 	file.Decls = append(file.Decls, interfaceDecl)
-
 	// 打印生成的代码
 	f := filepath.Join(pr, defPkgName, fmt.Sprintf("%s_def.go", strings.ToLower(n.Name)))
 	return write.WireGoFile(f, fset, file)
 }
 
 const (
-	CreateFuncName = "Create"
-	UpdateFuncName = "Update"
-	PatchFuncName  = "Patch"
-	GetFuncName    = "Get"
-	ListFuncName   = "List"
+	CreateFuncName = consts.DefCreateFuncName
+	UpdateFuncName = consts.DefUpdateFuncName
+	PatchFuncName  = consts.DefPatchFuncName
+	GetFuncName    = consts.DefGetFuncName
+	ListFuncName   = consts.DefListFuncName
 )
 
 func SaveDef(n *gen.Type) *ast.Field {

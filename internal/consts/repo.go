@@ -6,4 +6,5 @@ const (
 	BoPkgName    = "bo"
 	DtoPkgName   = "dto"
 	DefsvPkgName = "def"
+	ImpPkgName   = "imp"
 )

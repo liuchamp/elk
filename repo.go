@@ -5,6 +5,7 @@ import (
 	"github.com/masseelch/elk/outer/bo"
 	"github.com/masseelch/elk/outer/def"
 	"github.com/masseelch/elk/outer/dto"
+	"github.com/masseelch/elk/outer/imp"
 	"path/filepath"
 )
 
@@ -47,8 +48,11 @@ func RepoGenerator(c RepoConfig) gen.Hook {
 			if err != nil {
 				return err
 			}
-			// 4. 输出 router
-
+			// 5. 输出 dao 层的imp
+			err = imp.ImpOuter(g, c.cache)
+			if err != nil {
+				return err
+			}
 			return nil
 		})
 	}
