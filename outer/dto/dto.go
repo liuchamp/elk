@@ -2,6 +2,7 @@ package dto
 
 import (
 	"fmt"
+	"github.com/masseelch/elk/internal/consts"
 	"github.com/masseelch/elk/pkg/utils/write"
 	"go/ast"
 	"go/token"
@@ -28,6 +29,7 @@ func DtoOuter(g *gen.Graph, pr string) error {
 	return nil
 }
 
+const suffix = consts.DtoSuffix
 const po = "po"
 const dtoPkgName = "dto"
 
@@ -119,7 +121,7 @@ func genDto(g *gen.Graph, pr string, n *gen.Type) error {
 					&ast.UnaryExpr{
 						Op: token.AND,
 						X: &ast.CompositeLit{
-							Type: ast.NewIdent(fmt.Sprintf("%sDTO", n.Name)),
+							Type: ast.NewIdent(fmt.Sprintf("%s"+suffix, n.Name)),
 							Elts: elts,
 						},
 					},
@@ -130,13 +132,13 @@ func genDto(g *gen.Graph, pr string, n *gen.Type) error {
 
 	// 创建函数声明
 	funcDecl := &ast.FuncDecl{
-		Name: ast.NewIdent(fmt.Sprintf("New%sDTO", n.Name)),
+		Name: ast.NewIdent(fmt.Sprintf("New%s"+suffix, n.Name)),
 		Type: &ast.FuncType{
 			Params: &ast.FieldList{List: params},
 			Results: &ast.FieldList{
 				List: []*ast.Field{
 					{
-						Type: &ast.StarExpr{X: ast.NewIdent(fmt.Sprintf("%sDTO", n.Name))},
+						Type: &ast.StarExpr{X: ast.NewIdent(fmt.Sprintf("%s"+suffix, n.Name))},
 					},
 				},
 			},
