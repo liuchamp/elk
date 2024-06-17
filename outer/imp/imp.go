@@ -44,6 +44,11 @@ func genImp(g *gen.Graph, pr string, n *gen.Type) error {
 	astutil.AddNamedImport(fset, file, consts.BoPkgName, pkgNameEntBoPath)
 	pkgNameEntDTOPath := path.Join(n.Config.Package, consts.MainRepoPath, consts.DtoPkgName)
 	astutil.AddNamedImport(fset, file, consts.DtoPkgName, pkgNameEntDTOPath)
+
+	entityName := getEntityName(n)
+	pkgNameEntEntityPath := path.Join(n.Config.Package, entityName)
+	astutil.AddNamedImport(fset, file, entityName, pkgNameEntEntityPath)
+
 	astutil.AddNamedImport(fset, file, "log", "github.com/go-kratos/kratos/v2/log")
 	// imp 结构体
 	file.Decls = append(file.Decls, createStruct(n))
@@ -161,6 +166,10 @@ func createMethods(n *gen.Type) []ast.Decl {
 	var methods []ast.Decl
 
 	methods = append(methods, saveImp(n))
+	methods = append(methods, updateImp(n))
+	methods = append(methods, patchImp(n))
+	methods = append(methods, getImp(n))
+	methods = append(methods, listImp(n))
 
 	return methods
 }

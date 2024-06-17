@@ -1,7 +1,6 @@
 package imp
 
 import (
-	"fmt"
 	"go/ast"
 	"go/token"
 
@@ -10,7 +9,8 @@ import (
 	"github.com/masseelch/elk/pkg/utils"
 )
 
-func updateImp(n *gen.Type) *ast.FuncDecl {
+func patchImp(n *gen.Type) *ast.FuncDecl {
+
 	const mpsv = "imc"
 	// Create
 	createParams := &ast.FieldList{
@@ -21,7 +21,7 @@ func updateImp(n *gen.Type) *ast.FuncDecl {
 				Type: &ast.StarExpr{
 					X: &ast.SelectorExpr{
 						X:   ast.NewIdent(consts.BoPkgName),
-						Sel: ast.NewIdent(utils.ToCamelCase(n.Name) + consts.UpdateBoSuffix)},
+						Sel: ast.NewIdent(utils.ToCamelCase(n.Name) + consts.PatchBoSuffix)},
 				},
 			},
 		},
@@ -60,16 +60,34 @@ func updateImp(n *gen.Type) *ast.FuncDecl {
 
 	// 设置数据
 	for _, field := range n.Fields {
-		bodyStmt = append(bodyStmt, &ast.ExprStmt{
-			X: &ast.CallExpr{
-				Fun: &ast.SelectorExpr{
-					X:   ast.NewIdent(opHandle),
-					Sel: ast.NewIdent(fmt.Sprintf("Set%s", utils.ToCamelCase(field.Name))),
-				},
-				Args: []ast.Expr{&ast.SelectorExpr{
+		bodyStmt = append(bodyStmt, &ast.IfStmt{
+			Cond: &ast.BinaryExpr{
+				X: &ast.SelectorExpr{
 					X:   ast.NewIdent("req"),
 					Sel: ast.NewIdent(utils.ToCamelCase(field.Name)),
-				}},
+				},
+				Op: token.NEQ,
+				Y:  ast.NewIdent("nil"),
+			},
+			Body: &ast.BlockStmt{
+				List: []ast.Stmt{
+					&ast.ExprStmt{
+						X: &ast.CallExpr{
+							Fun: &ast.SelectorExpr{
+								X:   ast.NewIdent(opHandle),
+								Sel: ast.NewIdent("Set" + utils.ToCamelCase(field.Name)),
+							},
+							Args: []ast.Expr{
+								&ast.StarExpr{
+									X: &ast.SelectorExpr{
+										X:   ast.NewIdent("req"),
+										Sel: ast.NewIdent(utils.ToCamelCase(field.Name)),
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		})
 	}
@@ -140,5 +158,6 @@ func updateImp(n *gen.Type) *ast.FuncDecl {
 	createBody := &ast.BlockStmt{
 		List: bodyStmt,
 	}
-	return createMethod(mpsv, getImpStructName(n), consts.DefUpdateFuncName, createParams, createResults, createBody)
+	return createMethod(mpsv, getImpStructName(n), consts.DefPatchFuncName, createParams, createResults, createBody)
+
 }
