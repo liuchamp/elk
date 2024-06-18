@@ -51,9 +51,10 @@ func getImp(n *gen.Type) *ast.FuncDecl {
 			},
 		},
 	})
+
+	// 设置查询参数
 	entityName := getEntityName(n)
 	bodyStmt = append(bodyStmt, fieldQueryStmt(entityName, n.ID))
-	// 设置数据
 	for _, field := range n.Fields {
 		bodyStmt = append(bodyStmt, fieldQueryStmt(entityName, field))
 	}
@@ -226,6 +227,5 @@ func fieldQueryStmt(entityName string, field *gen.Field) ast.Stmt {
 }
 
 func getEntityName(n *gen.Type) string {
-
 	return utils.SnakeToCamel(n.Name)
 }

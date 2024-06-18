@@ -102,6 +102,252 @@ func boGen(g *gen.Graph, pr string, n *gen.Type) error {
 	file.Decls = append(file.Decls, boStruct(listFs, ListSuffix, n.Name))
 	file.Decls = append(file.Decls, boStruct(getFs, GetSuffix, n.Name))
 
+	// 实现 pager 接口
+
+	file.Decls = append(file.Decls,
+		&ast.FuncDecl{
+			Recv: &ast.FieldList{
+				List: []*ast.Field{
+					&ast.Field{
+						Names: []*ast.Ident{
+							&ast.Ident{
+								Name: "req",
+							},
+						},
+						Type: &ast.StarExpr{
+							X: ast.NewIdent(fmt.Sprintf("%s"+ListSuffix, n.Name)),
+						},
+					},
+				},
+			},
+			Name: &ast.Ident{
+				Name: "GetLimit",
+			},
+			Type: &ast.FuncType{
+				Params: &ast.FieldList{},
+				Results: &ast.FieldList{
+					List: []*ast.Field{
+						&ast.Field{
+							Type: &ast.Ident{
+								Name: "int",
+							},
+						},
+					},
+				},
+			},
+			Body: &ast.BlockStmt{
+				List: []ast.Stmt{
+					&ast.AssignStmt{
+						Lhs: []ast.Expr{
+							&ast.Ident{
+								Name: "pg",
+							},
+						},
+						Tok: token.DEFINE,
+						Rhs: []ast.Expr{
+							&ast.BasicLit{
+								Kind:  token.INT,
+								Value: "10",
+							},
+						},
+					},
+					&ast.IfStmt{
+						Cond: &ast.BinaryExpr{
+							X: &ast.BinaryExpr{
+								X: &ast.SelectorExpr{
+									X: &ast.Ident{
+										Name: "req",
+									},
+									Sel: &ast.Ident{
+										Name: "PageSize",
+									},
+								},
+								Op: token.GTR,
+								Y: &ast.BasicLit{
+									Kind:  token.INT,
+									Value: "0",
+								},
+							},
+							Op: token.LAND,
+							Y: &ast.BinaryExpr{
+								X: &ast.SelectorExpr{
+									X: &ast.Ident{
+										Name: "req",
+									},
+									Sel: &ast.Ident{
+										Name: "PageSize",
+									},
+								},
+								Op: token.LSS,
+								Y: &ast.BasicLit{
+									Kind:  token.INT,
+									Value: "999",
+								},
+							},
+						},
+						Body: &ast.BlockStmt{
+							List: []ast.Stmt{
+								&ast.AssignStmt{
+									Lhs: []ast.Expr{
+										&ast.Ident{
+											Name: "pg",
+										},
+									},
+									Tok: token.ASSIGN,
+									Rhs: []ast.Expr{
+										&ast.SelectorExpr{
+											X: &ast.Ident{
+												Name: "req",
+											},
+											Sel: &ast.Ident{
+												Name: "PageSize",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					&ast.ReturnStmt{
+						Results: []ast.Expr{
+							&ast.Ident{
+								Name: "pg",
+							},
+						},
+					},
+				},
+			},
+		},
+		&ast.FuncDecl{
+			Recv: &ast.FieldList{
+				List: []*ast.Field{
+					&ast.Field{
+						Names: []*ast.Ident{
+							&ast.Ident{
+								Name: "req",
+							},
+						},
+						Type: &ast.StarExpr{
+							X: ast.NewIdent(fmt.Sprintf("%s"+ListSuffix, n.Name)),
+						},
+					},
+				},
+			},
+			Name: &ast.Ident{
+				Name: "GetOffset",
+			},
+			Type: &ast.FuncType{
+				Params: &ast.FieldList{},
+				Results: &ast.FieldList{
+					List: []*ast.Field{
+						&ast.Field{
+							Type: &ast.Ident{
+								Name: "int",
+							},
+						},
+					},
+				},
+			},
+			Body: &ast.BlockStmt{
+				List: []ast.Stmt{
+					&ast.AssignStmt{
+						Lhs: []ast.Expr{
+							&ast.Ident{
+								Name: "pageSize",
+							},
+						},
+						Tok: token.DEFINE,
+						Rhs: []ast.Expr{
+							&ast.CallExpr{
+								Fun: &ast.SelectorExpr{
+									X: &ast.Ident{
+										Name: "req",
+									},
+									Sel: &ast.Ident{
+										Name: "GetLimit",
+									},
+								},
+							},
+						},
+					},
+					&ast.AssignStmt{
+						Lhs: []ast.Expr{
+							&ast.Ident{
+								Name: "pg",
+							},
+						},
+						Tok: token.DEFINE,
+						Rhs: []ast.Expr{
+							&ast.BasicLit{
+								Kind:  token.INT,
+								Value: "1",
+							},
+						},
+					},
+					&ast.IfStmt{
+						Cond: &ast.BinaryExpr{
+							X: &ast.SelectorExpr{
+								X: &ast.Ident{
+									Name: "req",
+								},
+								Sel: &ast.Ident{
+									Name: "Page",
+								},
+							},
+							Op: token.GTR,
+							Y: &ast.BasicLit{
+								Kind:  token.INT,
+								Value: "0",
+							},
+						},
+						Body: &ast.BlockStmt{
+							List: []ast.Stmt{
+								&ast.AssignStmt{
+									Lhs: []ast.Expr{
+										&ast.Ident{
+											Name: "pg",
+										},
+									},
+									Tok: token.ASSIGN,
+									Rhs: []ast.Expr{
+										&ast.SelectorExpr{
+											X: &ast.Ident{
+												Name: "req",
+											},
+											Sel: &ast.Ident{
+												Name: "Page",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					&ast.ReturnStmt{
+						Results: []ast.Expr{
+							&ast.BinaryExpr{
+								X: &ast.ParenExpr{
+									X: &ast.BinaryExpr{
+										X: &ast.Ident{
+											Name: "pg",
+										},
+										Op: token.SUB,
+										Y: &ast.BasicLit{
+											Kind:  token.INT,
+											Value: "1",
+										},
+									},
+								},
+								Op: token.MUL,
+								Y: &ast.Ident{
+									Name: "pageSize",
+								},
+							},
+						},
+					},
+				},
+			},
+		})
 	// 打印生成的代码
 	f := filepath.Join(pr, boPkgName, fmt.Sprintf("%s_bo.go", strings.ToLower(n.Name)))
 	return write.WireGoFile(f, fset, file)
