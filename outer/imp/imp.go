@@ -25,7 +25,7 @@ func ImpOuter(g *gen.Graph, pr string) error {
 			return err
 		}
 	}
-	return nil
+	return wireGen(g, pr)
 }
 
 func genImp(g *gen.Graph, pr string, n *gen.Type) error {
@@ -152,13 +152,16 @@ func createConstructor(n *gen.Type) *ast.FuncDecl {
 		},
 	}
 	return &ast.FuncDecl{
-		Name: ast.NewIdent(fmt.Sprintf("New%s%s", utils.ToCamelCase(n.Name), consts.DefRepoSuffix)),
+		Name: ast.NewIdent(GetImpNewFuncName(n)),
 		Type: &ast.FuncType{
 			Params:  params,
 			Results: results,
 		},
 		Body: body,
 	}
+}
+func GetImpNewFuncName(n *gen.Type) string {
+	return fmt.Sprintf("New%s%s", utils.ToCamelCase(n.Name), consts.DefRepoSuffix)
 }
 
 // createMethods 创建所有方法
