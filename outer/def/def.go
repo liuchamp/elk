@@ -8,7 +8,6 @@ import (
 	"go/ast"
 	"go/token"
 	"golang.org/x/tools/go/ast/astutil"
-	"path"
 	"path/filepath"
 	"strings"
 )
@@ -37,10 +36,8 @@ func DefGen(g *gen.Graph, pr string, n *gen.Type) error {
 	// 创建导入语句
 	pkgNameEntroot := filepath.Base(n.Config.Package)
 	astutil.AddNamedImport(fset, file, pkgNameEntroot, n.Config.Package)
-	pkgNameEntBoPath := path.Join(n.Config.Package, consts.MainRepoPath, consts.BoPkgName)
-	astutil.AddNamedImport(fset, file, consts.BoPkgName, pkgNameEntBoPath)
-	pkgNameEntDTOPath := path.Join(n.Config.Package, consts.MainRepoPath, consts.DtoPkgName)
-	astutil.AddNamedImport(fset, file, consts.DtoPkgName, pkgNameEntDTOPath)
+	astutil.AddNamedImport(fset, file, consts.BoPkgName, consts.GetBoPackageName(g.Package))
+	astutil.AddNamedImport(fset, file, consts.DtoPkgName, consts.GetDtoPackageName(g.Package))
 
 	var methods []*ast.Field
 	methods = append(methods, SaveDef(n))
