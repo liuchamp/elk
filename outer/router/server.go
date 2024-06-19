@@ -15,7 +15,7 @@ import (
 // 生成依赖注册代码
 const serverPkgName = "server"
 
-func wireGen(g *gen.Graph, pr string) error {
+func serverGen(g *gen.Graph, pr string) error {
 	// 创建文件集
 	fset := token.NewFileSet()
 
@@ -32,9 +32,10 @@ func wireGen(g *gen.Graph, pr string) error {
 	file.Decls = append(file.Decls, defineServer(g))
 
 	// 构造函数添加
+	file.Decls = append(file.Decls, defineCons(g))
 
 	// 打印生成的代码
-	f := filepath.Join(pr, serverPkgName, fmt.Sprintf("server.go"))
+	f := filepath.Join(pr, routerPkgName, serverPkgName, fmt.Sprintf("server.go"))
 	return write.WireGoFile(f, fset, file)
 }
 
