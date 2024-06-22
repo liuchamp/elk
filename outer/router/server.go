@@ -13,15 +13,13 @@ import (
 )
 
 // 生成依赖注册代码
-const serverPkgName = "server"
-
 func serverGen(g *gen.Graph, pr string) error {
 	// 创建文件集
 	fset := token.NewFileSet()
 
 	// 创建包名
 	file := &ast.File{
-		Name: ast.NewIdent(serverPkgName),
+		Name: ast.NewIdent(routerPkgName),
 	}
 
 	astutil.AddNamedImport(fset, file, "log", "github.com/go-kratos/kratos/v2/log")
@@ -35,7 +33,7 @@ func serverGen(g *gen.Graph, pr string) error {
 	file.Decls = append(file.Decls, defineCons(g))
 
 	// 打印生成的代码
-	f := filepath.Join(pr, routerPkgName, serverPkgName, fmt.Sprintf("server.go"))
+	f := filepath.Join(pr, routerPkgName, fmt.Sprintf("server.go"))
 	return write.WireGoFile(f, fset, file)
 }
 
@@ -83,6 +81,14 @@ func defineCons(g *gen.Graph) *ast.FuncDecl {
 				},
 			},
 		})
+		elts = append(elts, &ast.KeyValueExpr{
+			Key: &ast.Ident{
+				Name: utils.SnakeToCamel(n.Name),
+			},
+			Value: &ast.Ident{
+				Name: utils.SnakeToCamel(n.Name),
+			},
+		})
 	}
 	return &ast.FuncDecl{
 		Name: &ast.Ident{
@@ -95,11 +101,7 @@ func defineCons(g *gen.Graph) *ast.FuncDecl {
 			Results: &ast.FieldList{
 				List: []*ast.Field{
 					&ast.Field{
-						Type: &ast.StarExpr{
-							X: &ast.Ident{
-								Name: "httpServer",
-							},
-						},
+						Type: ast.NewIdent(routerServerName),
 					},
 				},
 			},
@@ -143,7 +145,7 @@ func defineCons(g *gen.Graph) *ast.FuncDecl {
 										},
 										&ast.BasicLit{
 											Kind:  token.STRING,
-											Value: "\"imp/pet\"",
+											Value: "\"server\"",
 										},
 									},
 								},
@@ -205,14 +207,14 @@ func defineServer(g *gen.Graph) *ast.GenDecl {
 	for _, node := range g.Nodes {
 		feilds = append(feilds, &ast.Field{
 			Names: []*ast.Ident{
-				ast.NewIdent(node.Name),
+				ast.NewIdent(utils.SnakeToCamel(node.Name)),
 			},
 			Type: &ast.SelectorExpr{
 				X: &ast.Ident{
 					Name: consts.DefsvPkgName,
 				},
 				Sel: &ast.Ident{
-					Name: node.Name + consts.DefRepoSuffix,
+					Name: utils.ToCamelCase(node.Name) + consts.DefRepoSuffix,
 				},
 			},
 		})

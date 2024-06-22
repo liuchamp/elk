@@ -2,10 +2,8 @@ package elk
 
 import (
 	"entgo.io/ent/entc/gen"
-	"github.com/masseelch/elk/outer/bo"
-	"github.com/masseelch/elk/outer/def"
-	"github.com/masseelch/elk/outer/dto"
-	"github.com/masseelch/elk/outer/imp"
+	"fmt"
+	"github.com/masseelch/elk/outer/router"
 	"path/filepath"
 )
 
@@ -33,24 +31,30 @@ func RepoGenerator(c RepoConfig) gen.Hook {
 			}
 			c.cache = filepath.Join(g.Config.Target, "repo")
 
-			// 2. 输出dto
-			err := dto.DtoOuter(g, c.cache)
+			//// 2. 输出dto
+			//err := dto.DtoOuter(g, c.cache)
+			//if err != nil {
+			//	return err
+			//}
+			//// 3. 输出 bo
+			//err = bo.BoOuter(g, c.cache)
+			//if err != nil {
+			//	return err
+			//}
+			//// 4. 输出 def
+			//err = def.DefOuter(g, c.cache)
+			//if err != nil {
+			//	return err
+			//}
+			//// 5. 输出 dao 层的imp
+			//err = imp.ImpOuter(g, c.cache)
+			//if err != nil {
+			//	return err
+			//}
+			// 6. 输出 router 层的imp
+			err := router.RouterGen(g, c.cache)
 			if err != nil {
-				return err
-			}
-			// 3. 输出 bo
-			err = bo.BoOuter(g, c.cache)
-			if err != nil {
-				return err
-			}
-			// 4. 输出 def
-			err = def.DefOuter(g, c.cache)
-			if err != nil {
-				return err
-			}
-			// 5. 输出 dao 层的imp
-			err = imp.ImpOuter(g, c.cache)
-			if err != nil {
+				fmt.Printf("cat not gen router %s", err.Error())
 				return err
 			}
 			return nil

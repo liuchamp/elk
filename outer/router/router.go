@@ -14,6 +14,7 @@ import (
 )
 
 const routerPkgName = "router"
+const routerServerName = "HTTPServer"
 
 // get name
 const GetRouterSuffix = "Get"
@@ -21,6 +22,19 @@ const GetRouterSuffix = "Get"
 func GetName(n *gen.Type) string {
 
 	return fmt.Sprintf("%s%s", utils.ToCamelCase(n.Name), GetRouterSuffix)
+}
+
+func RouterGen(g *gen.Graph, pr string) error {
+	err := routerGen(g, pr)
+	if err != nil {
+		return err
+	}
+	err = serverGen(g, pr)
+	if err != nil {
+		return err
+	}
+	err = serviceGen(g, pr)
+	return err
 }
 
 func routerGen(g *gen.Graph, pr string) error {
@@ -71,25 +85,30 @@ func routerGen(g *gen.Graph, pr string) error {
 
 		rouerImp = append(rouerImp, routerImpGen(n)...)
 	}
+	// 操作ids
 	file.Decls = append(file.Decls, &ast.GenDecl{
 		Tok:   token.CONST,
 		Specs: operationIds,
-	},
-		&ast.GenDecl{
-			Tok: token.TYPE,
-			Specs: []ast.Spec{
-				&ast.TypeSpec{
-					Name: &ast.Ident{
-						Name: "HTTPServer",
-					},
-					Type: &ast.InterfaceType{
-						Methods: &ast.FieldList{
-							List: iInterfaceTypes,
-						},
+	})
+
+	file.Decls = append(file.Decls, &ast.GenDecl{
+		Tok: token.TYPE,
+		Specs: []ast.Spec{
+			&ast.TypeSpec{
+				Name: &ast.Ident{
+					Name: routerServerName,
+				},
+				Type: &ast.InterfaceType{
+					Methods: &ast.FieldList{
+						List: iInterfaceTypes,
 					},
 				},
 			},
 		},
+	})
+
+	// 函数注册
+	file.Decls = append(file.Decls,
 		&ast.FuncDecl{
 			Name: &ast.Ident{
 				Name: "RegisterHTTPServer",
@@ -142,6 +161,8 @@ func routerGen(g *gen.Graph, pr string) error {
 			},
 		},
 	)
+
+	//注册函数
 	for _, decl := range rouerImp {
 		file.Decls = append(file.Decls, decl)
 	}
@@ -1192,7 +1213,7 @@ func routerListImp(n *gen.Type) *ast.FuncDecl {
 								Name: consts.DtoPkgName,
 							},
 							Sel: &ast.Ident{
-								Name: "PageResult",
+								Name: consts.PageResultNameStr,
 							},
 						},
 					},
@@ -1598,7 +1619,7 @@ func registerGen(n *gen.Type) []ast.Stmt {
 						Name: "r",
 					},
 					Sel: &ast.Ident{
-						Name: fn,
+						Name: methodMaps(fn),
 					},
 				},
 				Args: []ast.Expr{
@@ -1633,7 +1654,7 @@ func interfaceGen(n *gen.Type) []*ast.Field {
 		return &ast.Field{
 			Names: []*ast.Ident{
 				&ast.Ident{
-					Name: fmt.Sprintf("%s%s", utils.ToCamelCase(n.Name), fn),
+					Name: fmt.Sprintf("%s%s", fn, utils.ToCamelCase(n.Name)),
 				},
 			},
 			Type: &ast.FuncType{
@@ -1695,7 +1716,7 @@ func interfaceGen(n *gen.Type) []*ast.Field {
 		{
 			Names: []*ast.Ident{
 				&ast.Ident{
-					Name: fmt.Sprintf("%s%s", utils.ToCamelCase(n.Name), consts.DefListFuncName),
+					Name: fmt.Sprintf("%s%s", consts.DefListFuncName, utils.ToCamelCase(n.Name)),
 				},
 			},
 			Type: &ast.FuncType{
@@ -1734,7 +1755,7 @@ func interfaceGen(n *gen.Type) []*ast.Field {
 										Name: consts.DtoPkgName,
 									},
 									Sel: &ast.Ident{
-										Name: "PageResult", // 公共返回 PageResult 结构体
+										Name: consts.PageResultNameStr, // 公共返回 PageResult 结构体
 									},
 								},
 							},
@@ -1773,19 +1794,19 @@ func optIds(n *gen.Type) []ast.Spec {
 
 func genOptID(n *gen.Type) (string, string) {
 	return fmt.Sprintf("Operation%s%s", utils.ToCamelCase(n.Name), consts.DefGetFuncName),
-		fmt.Sprintf("/%s/%s", utils.SnakeToCamel(n.Name), utils.SnakeToCamel(consts.DefGetFuncName))
+		fmt.Sprintf("\"/%s/%s\"", utils.SnakeToCamel(n.Name), utils.SnakeToCamel(consts.DefGetFuncName))
 }
 func listOptID(n *gen.Type) (string, string) {
 	return fmt.Sprintf("Operation%s%s", utils.ToCamelCase(n.Name), consts.DefListFuncName),
-		fmt.Sprintf("/%s/%s", utils.SnakeToCamel(n.Name), utils.SnakeToCamel(consts.DefListFuncName))
+		fmt.Sprintf("\"/%s/%s\"", utils.SnakeToCamel(n.Name), utils.SnakeToCamel(consts.DefListFuncName))
 }
 func patchOptID(n *gen.Type) (string, string) {
 	return fmt.Sprintf("Operation%s%s", utils.ToCamelCase(n.Name), consts.DefPatchFuncName),
-		fmt.Sprintf("/%s/%s", utils.SnakeToCamel(n.Name), utils.SnakeToCamel(consts.DefPatchFuncName))
+		fmt.Sprintf("\"/%s/%s\"", utils.SnakeToCamel(n.Name), utils.SnakeToCamel(consts.DefPatchFuncName))
 }
 func createOptID(n *gen.Type) (string, string) {
 	return fmt.Sprintf("Operation%s%s", utils.ToCamelCase(n.Name), consts.DefCreateFuncName),
-		fmt.Sprintf("/%s/%s", utils.SnakeToCamel(n.Name), utils.SnakeToCamel(consts.DefCreateFuncName))
+		fmt.Sprintf("\"/%s/%s\"", utils.SnakeToCamel(n.Name), utils.SnakeToCamel(consts.DefCreateFuncName))
 }
 
 func routerHeader(g *gen.Graph) (*token.FileSet, *ast.File) {
@@ -1794,7 +1815,7 @@ func routerHeader(g *gen.Graph) (*token.FileSet, *ast.File) {
 
 	// 创建包名
 	file := &ast.File{
-		Name: ast.NewIdent(serverPkgName),
+		Name: ast.NewIdent(routerPkgName),
 	}
 
 	astutil.AddNamedImport(fset, file, "context", "context")
@@ -1803,4 +1824,21 @@ func routerHeader(g *gen.Graph) (*token.FileSet, *ast.File) {
 	astutil.AddNamedImport(fset, file, consts.DtoPkgName, consts.GetDtoPackageName(g.Package))
 
 	return fset, file
+}
+
+func methodMaps(fn string) string {
+
+	switch fn {
+	case "Create":
+		return "POST"
+	case "Patch":
+		return "PATCH"
+	case "Update":
+		return "PUT"
+	case "List", "Get":
+		return "GET"
+
+	default:
+		return "POST"
+	}
 }
