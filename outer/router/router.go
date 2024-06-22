@@ -153,11 +153,1077 @@ func routerGen(g *gen.Graph, pr string) error {
 func routerImpGen(n *gen.Type) []*ast.FuncDecl {
 
 	getRouterFunc := routerGetImp(n)
-	//patchRouterFunc := routerPatchImp(n)
-	//createRouterFunc := routerCreateImp(n)
-	//listRouterFunc := routerListImp(n)
+	patchRouterFunc := routerPatchImp(n)
+	createRouterFunc := routerCreateImp(n)
+	listRouterFunc := routerListImp(n)
 
-	return []*ast.FuncDecl{getRouterFunc}
+	return []*ast.FuncDecl{createRouterFunc, patchRouterFunc, getRouterFunc, listRouterFunc}
+}
+
+func routerImps(body []ast.Stmt, fn, meth string) *ast.FuncDecl {
+
+	return &ast.FuncDecl{
+		Name: &ast.Ident{
+			Name: fmt.Sprintf("_%s_%s_0_HTTP_Handler", utils.ToCamelCase(fn), meth),
+		},
+		Type: &ast.FuncType{
+			Params: &ast.FieldList{
+				List: []*ast.Field{
+					{
+						Names: []*ast.Ident{
+							{
+								Name: "srv",
+							},
+						},
+						Type: &ast.Ident{
+							Name: "HTTPServer",
+						},
+					},
+				},
+			},
+			Results: &ast.FieldList{
+				List: []*ast.Field{
+					&ast.Field{
+						Type: &ast.FuncType{
+							Params: &ast.FieldList{
+								List: []*ast.Field{
+									&ast.Field{
+										Names: []*ast.Ident{
+											&ast.Ident{
+												Name: "ctx",
+											},
+										},
+										Type: &ast.SelectorExpr{
+											X: &ast.Ident{
+												Name: "http",
+											},
+											Sel: &ast.Ident{
+												Name: "Context",
+											},
+										},
+									},
+								},
+							},
+							Results: &ast.FieldList{
+								List: []*ast.Field{
+									&ast.Field{
+										Type: &ast.Ident{
+											Name: "error",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Body: &ast.BlockStmt{
+			List: []ast.Stmt{
+				&ast.ReturnStmt{
+					Results: []ast.Expr{
+						&ast.FuncLit{
+							Type: &ast.FuncType{
+								Params: &ast.FieldList{
+									List: []*ast.Field{
+										&ast.Field{
+											Names: []*ast.Ident{
+												&ast.Ident{
+													Name: "ctx",
+												},
+											},
+											Type: &ast.SelectorExpr{
+												X: &ast.Ident{
+													Name: "http",
+												},
+												Sel: &ast.Ident{
+													Name: "Context",
+												},
+											},
+										},
+									},
+								},
+								Results: &ast.FieldList{
+									List: []*ast.Field{
+										&ast.Field{
+											Type: &ast.Ident{
+												Name: "error",
+											},
+										},
+									},
+								},
+							},
+							Body: &ast.BlockStmt{
+								List: body,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+func routerPatchImp(n *gen.Type) *ast.FuncDecl {
+
+	bodyStmlx := []ast.Stmt{
+		&ast.DeclStmt{
+			Decl: &ast.GenDecl{
+				Tok: token.VAR,
+				Specs: []ast.Spec{
+					&ast.ValueSpec{
+						Names: []*ast.Ident{
+							&ast.Ident{
+								Name: "in",
+							},
+						},
+						Type: &ast.SelectorExpr{
+							X: &ast.Ident{
+								Name: consts.BoPkgName,
+							},
+							Sel: &ast.Ident{
+								Name: fmt.Sprintf("%s%s", utils.ToCamelCase(n.Name), consts.PatchBoSuffix),
+							},
+						},
+					},
+				},
+			},
+		},
+		&ast.IfStmt{
+			Init: &ast.AssignStmt{
+				Lhs: []ast.Expr{
+					&ast.Ident{
+						Name: "err",
+					},
+				},
+				Tok: token.DEFINE,
+				Rhs: []ast.Expr{
+					&ast.CallExpr{
+						Fun: &ast.SelectorExpr{
+							X: &ast.Ident{
+								Name: "ctx",
+							},
+							Sel: &ast.Ident{
+								Name: "BindQuery",
+							},
+						},
+						Args: []ast.Expr{
+							&ast.UnaryExpr{
+								Op: token.AND,
+								X: &ast.Ident{
+									Name: "in",
+								},
+							},
+						},
+					},
+				},
+			},
+			Cond: &ast.BinaryExpr{
+				X: &ast.Ident{
+					Name: "err",
+				},
+				Op: token.NEQ,
+				Y: &ast.Ident{
+					Name: "nil",
+				},
+			},
+			Body: &ast.BlockStmt{
+				List: []ast.Stmt{
+					&ast.ReturnStmt{
+						Results: []ast.Expr{
+							&ast.Ident{
+								Name: "err",
+							},
+						},
+					},
+				},
+			},
+		},
+		&ast.IfStmt{
+			Init: &ast.AssignStmt{
+				Lhs: []ast.Expr{
+					&ast.Ident{
+						Name: "err",
+					},
+				},
+				Tok: token.DEFINE,
+				Rhs: []ast.Expr{
+					&ast.CallExpr{
+						Fun: &ast.SelectorExpr{
+							X: &ast.Ident{
+								Name: "ctx",
+							},
+							Sel: &ast.Ident{
+								Name: "BindVars",
+							},
+						},
+						Args: []ast.Expr{
+							&ast.UnaryExpr{
+								Op: token.AND,
+								X: &ast.Ident{
+									Name: "in",
+								},
+							},
+						},
+					},
+				},
+			},
+			Cond: &ast.BinaryExpr{
+				X: &ast.Ident{
+					Name: "err",
+				},
+				Op: token.NEQ,
+				Y: &ast.Ident{
+					Name: "nil",
+				},
+			},
+			Body: &ast.BlockStmt{
+				List: []ast.Stmt{
+					&ast.ReturnStmt{
+						Results: []ast.Expr{
+							&ast.Ident{
+								Name: "err",
+							},
+						},
+					},
+				},
+			},
+		},
+		&ast.ExprStmt{
+			X: &ast.CallExpr{
+				Fun: &ast.SelectorExpr{
+					X: &ast.Ident{
+						Name: "http",
+					},
+					Sel: &ast.Ident{
+						Name: "SetOperation",
+					},
+				},
+				Args: []ast.Expr{
+					&ast.Ident{
+						Name: "ctx",
+					},
+					&ast.Ident{
+						Name: "Operation" + utils.ToCamelCase(n.Name) + consts.DefPatchFuncName,
+					},
+				},
+			},
+		},
+		&ast.AssignStmt{
+			Lhs: []ast.Expr{
+				&ast.Ident{
+					Name: "h",
+				},
+			},
+			Tok: token.DEFINE,
+			Rhs: []ast.Expr{
+				&ast.CallExpr{
+					Fun: &ast.SelectorExpr{
+						X: &ast.Ident{
+							Name: "ctx",
+						},
+						Sel: &ast.Ident{
+							Name: "Middleware",
+						},
+					},
+					Args: []ast.Expr{
+						&ast.FuncLit{
+							Type: &ast.FuncType{
+								Params: &ast.FieldList{
+									List: []*ast.Field{
+										&ast.Field{
+											Names: []*ast.Ident{
+												&ast.Ident{
+													Name: "ctx",
+												},
+											},
+											Type: &ast.SelectorExpr{
+												X: &ast.Ident{
+													Name: "context",
+												},
+												Sel: &ast.Ident{
+													Name: "Context",
+												},
+											},
+										},
+										&ast.Field{
+											Names: []*ast.Ident{
+												&ast.Ident{
+													Name: "req",
+												},
+											},
+											Type: &ast.InterfaceType{
+												Methods: &ast.FieldList{},
+											},
+										},
+									},
+								},
+								Results: &ast.FieldList{
+									List: []*ast.Field{
+										&ast.Field{
+											Type: &ast.InterfaceType{
+												Methods: &ast.FieldList{},
+											},
+										},
+										&ast.Field{
+											Type: &ast.Ident{
+												Name: "error",
+											},
+										},
+									},
+								},
+							},
+							Body: &ast.BlockStmt{
+								List: []ast.Stmt{
+									&ast.ReturnStmt{
+										Results: []ast.Expr{
+											&ast.CallExpr{
+												Fun: &ast.SelectorExpr{
+													X: &ast.Ident{
+														Name: "srv",
+													},
+													Sel: &ast.Ident{
+														Name: consts.DefPatchFuncName + utils.ToCamelCase(n.Name),
+													},
+												},
+												Args: []ast.Expr{
+													&ast.Ident{
+														Name: "ctx",
+													},
+													&ast.TypeAssertExpr{
+														X: &ast.Ident{
+															Name: "req",
+														},
+														Type: &ast.StarExpr{
+															X: &ast.SelectorExpr{
+																X: &ast.Ident{
+																	Name: consts.BoPkgName,
+																},
+																Sel: &ast.Ident{
+																	Name: utils.ToCamelCase(n.Name) + consts.PatchBoSuffix,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		&ast.AssignStmt{
+			Lhs: []ast.Expr{
+				&ast.Ident{
+					Name: "out",
+				},
+				&ast.Ident{
+					Name: "err",
+				},
+			},
+			Tok: token.DEFINE,
+			Rhs: []ast.Expr{
+				&ast.CallExpr{
+					Fun: &ast.Ident{
+						Name: "h",
+					},
+					Args: []ast.Expr{
+						&ast.Ident{
+							Name: "ctx",
+						},
+						&ast.UnaryExpr{
+							Op: token.AND,
+							X: &ast.Ident{
+								Name: "in",
+							},
+						},
+					},
+				},
+			},
+		},
+		&ast.IfStmt{
+			Cond: &ast.BinaryExpr{
+				X: &ast.Ident{
+					Name: "err",
+				},
+				Op: token.NEQ,
+				Y: &ast.Ident{
+					Name: "nil",
+				},
+			},
+			Body: &ast.BlockStmt{
+				List: []ast.Stmt{
+					&ast.ReturnStmt{
+						Results: []ast.Expr{
+							&ast.Ident{
+								Name: "err",
+							},
+						},
+					},
+				},
+			},
+		},
+		&ast.AssignStmt{
+			Lhs: []ast.Expr{
+				&ast.Ident{
+					Name: "reply",
+				},
+			},
+			Tok: token.DEFINE,
+			Rhs: []ast.Expr{
+				&ast.TypeAssertExpr{
+					X: &ast.Ident{
+						Name: "out",
+					},
+					Type: &ast.StarExpr{
+						X: &ast.SelectorExpr{
+							X: &ast.Ident{
+								Name: "dto",
+							},
+							Sel: &ast.Ident{
+								Name: utils.ToCamelCase(n.Name) + consts.DtoSuffix,
+							},
+						},
+					},
+				},
+			},
+		},
+		&ast.ReturnStmt{
+			Results: []ast.Expr{
+				&ast.CallExpr{
+					Fun: &ast.SelectorExpr{
+						X: &ast.Ident{
+							Name: "ctx",
+						},
+						Sel: &ast.Ident{
+							Name: "Result",
+						},
+					},
+					Args: []ast.Expr{
+						&ast.BasicLit{
+							Kind:  token.INT,
+							Value: "200",
+						},
+						&ast.Ident{
+							Name: "reply",
+						},
+					},
+				},
+			},
+		},
+	}
+	return routerImps(bodyStmlx, n.Name, consts.DefPatchFuncName)
+}
+func routerCreateImp(n *gen.Type) *ast.FuncDecl {
+
+	bodyStmlx := []ast.Stmt{
+		&ast.DeclStmt{
+			Decl: &ast.GenDecl{
+				Tok: token.VAR,
+				Specs: []ast.Spec{
+					&ast.ValueSpec{
+						Names: []*ast.Ident{
+							&ast.Ident{
+								Name: "in",
+							},
+						},
+						Type: &ast.SelectorExpr{
+							X: &ast.Ident{
+								Name: consts.BoPkgName,
+							},
+							Sel: &ast.Ident{
+								Name: utils.ToCamelCase(n.Name) + consts.CreateBoSuffix,
+							},
+						},
+					},
+				},
+			},
+		},
+		&ast.IfStmt{
+			Init: &ast.AssignStmt{
+				Lhs: []ast.Expr{
+					&ast.Ident{
+						Name: "err",
+					},
+				},
+				Tok: token.DEFINE,
+				Rhs: []ast.Expr{
+					&ast.CallExpr{
+						Fun: &ast.SelectorExpr{
+							X: &ast.Ident{
+								Name: "ctx",
+							},
+							Sel: &ast.Ident{
+								Name: "Bind",
+							},
+						},
+						Args: []ast.Expr{
+							&ast.UnaryExpr{
+								Op: token.AND,
+								X: &ast.Ident{
+									Name: "in",
+								},
+							},
+						},
+					},
+				},
+			},
+			Cond: &ast.BinaryExpr{
+				X: &ast.Ident{
+					Name: "err",
+				},
+				Op: token.NEQ,
+				Y: &ast.Ident{
+					Name: "nil",
+				},
+			},
+			Body: &ast.BlockStmt{
+				List: []ast.Stmt{
+					&ast.ReturnStmt{
+						Results: []ast.Expr{
+							&ast.Ident{
+								Name: "err",
+							},
+						},
+					},
+				},
+			},
+		},
+		&ast.ExprStmt{
+			X: &ast.CallExpr{
+				Fun: &ast.SelectorExpr{
+					X: &ast.Ident{
+						Name: "http",
+					},
+					Sel: &ast.Ident{
+						Name: "SetOperation",
+					},
+				},
+				Args: []ast.Expr{
+					&ast.Ident{
+						Name: "ctx",
+					},
+					&ast.Ident{
+						Name: "Operation" + utils.ToCamelCase(n.Name) + consts.DefCreateFuncName,
+					},
+				},
+			},
+		},
+		&ast.AssignStmt{
+			Lhs: []ast.Expr{
+				&ast.Ident{
+					Name: "h",
+				},
+			},
+			Tok: token.DEFINE,
+			Rhs: []ast.Expr{
+				&ast.CallExpr{
+					Fun: &ast.SelectorExpr{
+						X: &ast.Ident{
+							Name: "ctx",
+						},
+						Sel: &ast.Ident{
+							Name: "Middleware",
+						},
+					},
+					Args: []ast.Expr{
+						&ast.FuncLit{
+							Type: &ast.FuncType{
+								Params: &ast.FieldList{
+									List: []*ast.Field{
+										&ast.Field{
+											Names: []*ast.Ident{
+												&ast.Ident{
+													Name: "ctx",
+												},
+											},
+											Type: &ast.SelectorExpr{
+												X: &ast.Ident{
+													Name: "context",
+												},
+												Sel: &ast.Ident{
+													Name: "Context",
+												},
+											},
+										},
+										&ast.Field{
+											Names: []*ast.Ident{
+												&ast.Ident{
+													Name: "req",
+												},
+											},
+											Type: &ast.InterfaceType{
+												Methods: &ast.FieldList{},
+											},
+										},
+									},
+								},
+								Results: &ast.FieldList{
+									List: []*ast.Field{
+										&ast.Field{
+											Type: &ast.InterfaceType{
+												Methods: &ast.FieldList{},
+											},
+										},
+										&ast.Field{
+											Type: &ast.Ident{
+												Name: "error",
+											},
+										},
+									},
+								},
+							},
+							Body: &ast.BlockStmt{
+								List: []ast.Stmt{
+									&ast.ReturnStmt{
+										Results: []ast.Expr{
+											&ast.CallExpr{
+												Fun: &ast.SelectorExpr{
+													X: &ast.Ident{
+														Name: "srv",
+													},
+													Sel: &ast.Ident{
+														Name: consts.DefCreateFuncName + utils.ToCamelCase(n.Name),
+													},
+												},
+												Args: []ast.Expr{
+													&ast.Ident{
+														Name: "ctx",
+													},
+													&ast.TypeAssertExpr{
+														X: &ast.Ident{
+															Name: "req",
+														},
+														Type: &ast.StarExpr{
+															X: &ast.SelectorExpr{
+																X: &ast.Ident{
+																	Name: consts.BoPkgName,
+																},
+																Sel: &ast.Ident{
+																	Name: utils.ToCamelCase(n.Name) + consts.CreateBoSuffix,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		&ast.AssignStmt{
+			Lhs: []ast.Expr{
+				&ast.Ident{
+					Name: "out",
+				},
+				&ast.Ident{
+					Name: "err",
+				},
+			},
+			Tok: token.DEFINE,
+			Rhs: []ast.Expr{
+				&ast.CallExpr{
+					Fun: &ast.Ident{
+						Name: "h",
+					},
+					Args: []ast.Expr{
+						&ast.Ident{
+							Name: "ctx",
+						},
+						&ast.UnaryExpr{
+							Op: token.AND,
+							X: &ast.Ident{
+								Name: "in",
+							},
+						},
+					},
+				},
+			},
+		},
+		&ast.IfStmt{
+			Cond: &ast.BinaryExpr{
+				X: &ast.Ident{
+					Name: "err",
+				},
+				Op: token.NEQ,
+				Y: &ast.Ident{
+					Name: "nil",
+				},
+			},
+			Body: &ast.BlockStmt{
+				List: []ast.Stmt{
+					&ast.ReturnStmt{
+						Results: []ast.Expr{
+							&ast.Ident{
+								Name: "err",
+							},
+						},
+					},
+				},
+			},
+		},
+		&ast.AssignStmt{
+			Lhs: []ast.Expr{
+				&ast.Ident{
+					Name: "reply",
+				},
+			},
+			Tok: token.DEFINE,
+			Rhs: []ast.Expr{
+				&ast.TypeAssertExpr{
+					X: &ast.Ident{
+						Name: "out",
+					},
+					Type: &ast.StarExpr{
+						X: &ast.SelectorExpr{
+							X: &ast.Ident{
+								Name: consts.DtoPkgName,
+							},
+							Sel: &ast.Ident{
+								Name: utils.ToCamelCase(n.Name) + consts.DtoSuffix,
+							},
+						},
+					},
+				},
+			},
+		},
+		&ast.ReturnStmt{
+			Results: []ast.Expr{
+				&ast.CallExpr{
+					Fun: &ast.SelectorExpr{
+						X: &ast.Ident{
+							Name: "ctx",
+						},
+						Sel: &ast.Ident{
+							Name: "Result",
+						},
+					},
+					Args: []ast.Expr{
+						&ast.BasicLit{
+							Kind:  token.INT,
+							Value: "200",
+						},
+						&ast.Ident{
+							Name: "reply",
+						},
+					},
+				},
+			},
+		},
+	}
+	return routerImps(bodyStmlx, n.Name, consts.DefCreateFuncName)
+}
+func routerListImp(n *gen.Type) *ast.FuncDecl {
+
+	bodyStmlx := []ast.Stmt{
+		&ast.DeclStmt{
+			Decl: &ast.GenDecl{
+				Tok: token.VAR,
+				Specs: []ast.Spec{
+					&ast.ValueSpec{
+						Names: []*ast.Ident{
+							&ast.Ident{
+								Name: "in",
+							},
+						},
+						Type: &ast.SelectorExpr{
+							X: &ast.Ident{
+								Name: consts.BoPkgName,
+							},
+							Sel: &ast.Ident{
+								Name: utils.ToCamelCase(n.Name) + consts.ListBoSuffix,
+							},
+						},
+					},
+				},
+			},
+		},
+		&ast.IfStmt{
+			Init: &ast.AssignStmt{
+				Lhs: []ast.Expr{
+					&ast.Ident{
+						Name: "err",
+					},
+				},
+				Tok: token.DEFINE,
+				Rhs: []ast.Expr{
+					&ast.CallExpr{
+						Fun: &ast.SelectorExpr{
+							X: &ast.Ident{
+								Name: "ctx",
+							},
+							Sel: &ast.Ident{
+								Name: "BindQuery",
+							},
+						},
+						Args: []ast.Expr{
+							&ast.UnaryExpr{
+								Op: token.AND,
+								X: &ast.Ident{
+									Name: "in",
+								},
+							},
+						},
+					},
+				},
+			},
+			Cond: &ast.BinaryExpr{
+				X: &ast.Ident{
+					Name: "err",
+				},
+				Op: token.NEQ,
+				Y: &ast.Ident{
+					Name: "nil",
+				},
+			},
+			Body: &ast.BlockStmt{
+				List: []ast.Stmt{
+					&ast.ReturnStmt{
+						Results: []ast.Expr{
+							&ast.Ident{
+								Name: "err",
+							},
+						},
+					},
+				},
+			},
+		},
+		&ast.ExprStmt{
+			X: &ast.CallExpr{
+				Fun: &ast.SelectorExpr{
+					X: &ast.Ident{
+						Name: "http",
+					},
+					Sel: &ast.Ident{
+						Name: "SetOperation",
+					},
+				},
+				Args: []ast.Expr{
+					&ast.Ident{
+						Name: "ctx",
+					},
+					&ast.Ident{
+						Name: "Operation" + utils.ToCamelCase(n.Name) + consts.DefListFuncName,
+					},
+				},
+			},
+		},
+		&ast.AssignStmt{
+			Lhs: []ast.Expr{
+				&ast.Ident{
+					Name: "h",
+				},
+			},
+			Tok: token.DEFINE,
+			Rhs: []ast.Expr{
+				&ast.CallExpr{
+					Fun: &ast.SelectorExpr{
+						X: &ast.Ident{
+							Name: "ctx",
+						},
+						Sel: &ast.Ident{
+							Name: "Middleware",
+						},
+					},
+					Args: []ast.Expr{
+						&ast.FuncLit{
+							Type: &ast.FuncType{
+								Params: &ast.FieldList{
+									List: []*ast.Field{
+										&ast.Field{
+											Names: []*ast.Ident{
+												&ast.Ident{
+													Name: "ctx",
+												},
+											},
+											Type: &ast.SelectorExpr{
+												X: &ast.Ident{
+													Name: "context",
+												},
+												Sel: &ast.Ident{
+													Name: "Context",
+												},
+											},
+										},
+										&ast.Field{
+											Names: []*ast.Ident{
+												&ast.Ident{
+													Name: "req",
+												},
+											},
+											Type: &ast.InterfaceType{
+												Methods: &ast.FieldList{},
+											},
+										},
+									},
+								},
+								Results: &ast.FieldList{
+									List: []*ast.Field{
+										&ast.Field{
+											Type: &ast.InterfaceType{
+												Methods: &ast.FieldList{},
+											},
+										},
+										&ast.Field{
+											Type: &ast.Ident{
+												Name: "error",
+											},
+										},
+									},
+								},
+							},
+							Body: &ast.BlockStmt{
+								List: []ast.Stmt{
+									&ast.ReturnStmt{
+										Results: []ast.Expr{
+											&ast.CallExpr{
+												Fun: &ast.SelectorExpr{
+													X: &ast.Ident{
+														Name: "srv",
+													},
+													Sel: &ast.Ident{
+														Name: consts.DefListFuncName + utils.ToCamelCase(n.Name),
+													},
+												},
+												Args: []ast.Expr{
+													&ast.Ident{
+														Name: "ctx",
+													},
+													&ast.TypeAssertExpr{
+														X: &ast.Ident{
+															Name: "req",
+														},
+														Type: &ast.StarExpr{
+															X: &ast.SelectorExpr{
+																X: &ast.Ident{
+																	Name: consts.BoPkgName,
+																},
+																Sel: &ast.Ident{
+																	Name: utils.ToCamelCase(n.Name) + consts.ListBoSuffix,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		&ast.AssignStmt{
+			Lhs: []ast.Expr{
+				&ast.Ident{
+					Name: "out",
+				},
+				&ast.Ident{
+					Name: "err",
+				},
+			},
+			Tok: token.DEFINE,
+			Rhs: []ast.Expr{
+				&ast.CallExpr{
+					Fun: &ast.Ident{
+						Name: "h",
+					},
+					Args: []ast.Expr{
+						&ast.Ident{
+							Name: "ctx",
+						},
+						&ast.UnaryExpr{
+							Op: token.AND,
+							X: &ast.Ident{
+								Name: "in",
+							},
+						},
+					},
+				},
+			},
+		},
+		&ast.IfStmt{
+			Cond: &ast.BinaryExpr{
+				X: &ast.Ident{
+					Name: "err",
+				},
+				Op: token.NEQ,
+				Y: &ast.Ident{
+					Name: "nil",
+				},
+			},
+			Body: &ast.BlockStmt{
+				List: []ast.Stmt{
+					&ast.ReturnStmt{
+						Results: []ast.Expr{
+							&ast.Ident{
+								Name: "err",
+							},
+						},
+					},
+				},
+			},
+		},
+		&ast.AssignStmt{
+			Lhs: []ast.Expr{
+				&ast.Ident{
+					Name: "reply",
+				},
+			},
+			Tok: token.DEFINE,
+			Rhs: []ast.Expr{
+				&ast.TypeAssertExpr{
+					X: &ast.Ident{
+						Name: "out",
+					},
+					Type: &ast.StarExpr{
+						X: &ast.SelectorExpr{
+							X: &ast.Ident{
+								Name: consts.DtoPkgName,
+							},
+							Sel: &ast.Ident{
+								Name: "PageResult",
+							},
+						},
+					},
+				},
+			},
+		},
+		&ast.ReturnStmt{
+			Results: []ast.Expr{
+				&ast.CallExpr{
+					Fun: &ast.SelectorExpr{
+						X: &ast.Ident{
+							Name: "ctx",
+						},
+						Sel: &ast.Ident{
+							Name: "Result",
+						},
+					},
+					Args: []ast.Expr{
+						&ast.BasicLit{
+							Kind:  token.INT,
+							Value: "200",
+						},
+						&ast.Ident{
+							Name: "reply",
+						},
+					},
+				},
+			},
+		},
+	}
+	return routerImps(bodyStmlx, n.Name, consts.DefListFuncName)
 }
 
 func routerGetImp(n *gen.Type) *ast.FuncDecl {
@@ -521,111 +1587,10 @@ func routerGetImp(n *gen.Type) *ast.FuncDecl {
 			},
 		},
 	}
-
-	return &ast.FuncDecl{
-		Name: &ast.Ident{
-			Name: fmt.Sprintf("_%s_%s_0_HTTP_Handler", utils.ToCamelCase(n.Name), consts.DefGetFuncName),
-		},
-		Type: &ast.FuncType{
-			Params: &ast.FieldList{
-				List: []*ast.Field{
-					{
-						Names: []*ast.Ident{
-							{
-								Name: "srv",
-							},
-						},
-						Type: &ast.Ident{
-							Name: "HTTPServer",
-						},
-					},
-				},
-			},
-			Results: &ast.FieldList{
-				List: []*ast.Field{
-					&ast.Field{
-						Type: &ast.FuncType{
-							Params: &ast.FieldList{
-								List: []*ast.Field{
-									&ast.Field{
-										Names: []*ast.Ident{
-											&ast.Ident{
-												Name: "ctx",
-											},
-										},
-										Type: &ast.SelectorExpr{
-											X: &ast.Ident{
-												Name: "http",
-											},
-											Sel: &ast.Ident{
-												Name: "Context",
-											},
-										},
-									},
-								},
-							},
-							Results: &ast.FieldList{
-								List: []*ast.Field{
-									&ast.Field{
-										Type: &ast.Ident{
-											Name: "error",
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		Body: &ast.BlockStmt{
-			List: []ast.Stmt{
-				&ast.ReturnStmt{
-					Results: []ast.Expr{
-						&ast.FuncLit{
-							Type: &ast.FuncType{
-								Params: &ast.FieldList{
-									List: []*ast.Field{
-										&ast.Field{
-											Names: []*ast.Ident{
-												&ast.Ident{
-													Name: "ctx",
-												},
-											},
-											Type: &ast.SelectorExpr{
-												X: &ast.Ident{
-													Name: "http",
-												},
-												Sel: &ast.Ident{
-													Name: "Context",
-												},
-											},
-										},
-									},
-								},
-								Results: &ast.FieldList{
-									List: []*ast.Field{
-										&ast.Field{
-											Type: &ast.Ident{
-												Name: "error",
-											},
-										},
-									},
-								},
-							},
-							Body: &ast.BlockStmt{
-								List: bodyStmlx,
-							},
-						},
-					},
-				},
-			},
-		},
-	}
+	return routerImps(bodyStmlx, n.Name, consts.DefGetFuncName)
 }
 func registerGen(n *gen.Type) []ast.Stmt {
 	genfun := func(fn string, path string) ast.Stmt {
-
 		return &ast.ExprStmt{
 			X: &ast.CallExpr{
 				Fun: &ast.SelectorExpr{
@@ -723,9 +1688,10 @@ func interfaceGen(n *gen.Type) []*ast.Field {
 		}
 	}
 	iis := []*ast.Field{
-		iifc(consts.DefGetFuncName, consts.GetBoSuffix),
 		iifc(consts.DefPatchFuncName, consts.PatchBoSuffix),
 		iifc(consts.DefCreateFuncName, consts.CreateBoSuffix),
+		iifc(consts.DefGetFuncName, consts.GetBoSuffix),
+		// list 返回的结构体， 不一样
 		{
 			Names: []*ast.Ident{
 				&ast.Ident{
@@ -768,7 +1734,7 @@ func interfaceGen(n *gen.Type) []*ast.Field {
 										Name: consts.DtoPkgName,
 									},
 									Sel: &ast.Ident{
-										Name: fmt.Sprintf("%s%s", utils.ToCamelCase(n.Name), consts.DtoSuffix),
+										Name: "PageResult", // 公共返回 PageResult 结构体
 									},
 								},
 							},
@@ -787,36 +1753,20 @@ func interfaceGen(n *gen.Type) []*ast.Field {
 }
 
 func optIds(n *gen.Type) []ast.Spec {
-	getOptName, getOptID := genOptID(n)
-	pathOptName, patchOptIDe := patchOptID(n)
-	listOptName, listOptIDe := listOptID(n)
-	createOptName, createOptIDe := createOptID(n)
-
+	optValueGen := func(gfn func(p *gen.Type) (string, string)) *ast.ValueSpec {
+		OptName, OptID := gfn(n)
+		return &ast.ValueSpec{
+			Names: []*ast.Ident{ast.NewIdent(OptName)},
+			Values: []ast.Expr{
+				&ast.BasicLit{Kind: token.STRING, Value: OptID},
+			},
+		}
+	}
 	opst := []ast.Spec{
-		&ast.ValueSpec{
-			Names: []*ast.Ident{ast.NewIdent(getOptName)},
-			Values: []ast.Expr{
-				&ast.BasicLit{Kind: token.STRING, Value: getOptID},
-			},
-		},
-		&ast.ValueSpec{
-			Names: []*ast.Ident{ast.NewIdent(pathOptName)},
-			Values: []ast.Expr{
-				&ast.BasicLit{Kind: token.STRING, Value: patchOptIDe},
-			},
-		},
-		&ast.ValueSpec{
-			Names: []*ast.Ident{ast.NewIdent(listOptName)},
-			Values: []ast.Expr{
-				&ast.BasicLit{Kind: token.STRING, Value: listOptIDe},
-			},
-		},
-		&ast.ValueSpec{
-			Names: []*ast.Ident{ast.NewIdent(createOptName)},
-			Values: []ast.Expr{
-				&ast.BasicLit{Kind: token.STRING, Value: createOptIDe},
-			},
-		},
+		optValueGen(createOptID),
+		optValueGen(patchOptID),
+		optValueGen(genOptID),
+		optValueGen(listOptID),
 	}
 	return opst
 }
