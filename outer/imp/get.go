@@ -2,8 +2,10 @@ package imp
 
 import (
 	field2 "entgo.io/ent/schema/field"
+	"github.com/masseelch/elk/annotation"
 	"go/ast"
 	"go/token"
+	"strings"
 
 	"entgo.io/ent/entc/gen"
 	"github.com/masseelch/elk/internal/consts"
@@ -54,9 +56,9 @@ func getImp(n *gen.Type) *ast.FuncDecl {
 
 	// 设置查询参数
 	entityName := getEntityName(n)
-	bodyStmt = append(bodyStmt, fieldQueryStmt(entityName, n.ID))
+	bodyStmt = append(bodyStmt, fieldQueryStmt(entityName, n.ID)...)
 	for _, field := range n.Fields {
-		bodyStmt = append(bodyStmt, fieldQueryStmt(entityName, field))
+		bodyStmt = append(bodyStmt, fieldQueryStmt(entityName, field)...)
 	}
 	// 生成操作结果
 	bodyStmt = append(bodyStmt, &ast.AssignStmt{
@@ -130,40 +132,45 @@ func getImp(n *gen.Type) *ast.FuncDecl {
 
 }
 
-func fieldQueryStmt(entityName string, field *gen.Field) ast.Stmt {
+func fieldQueryStmt(entityName string, field *gen.Field) []ast.Stmt {
 	const opHandle = "query"
 	fieldKey := utils.ToCamelCase(field.Name)
 	if fieldKey == "Id" {
 		fieldKey = "ID"
 	}
-	list := []ast.Stmt{
-		&ast.ExprStmt{
-			X: &ast.CallExpr{
-				Fun: &ast.SelectorExpr{
-					X:   ast.NewIdent(opHandle),
-					Sel: ast.NewIdent("Where"),
-				},
-				Args: []ast.Expr{
-					&ast.CallExpr{
-						Fun: &ast.SelectorExpr{
-							X: &ast.Ident{
-								Name: entityName,
+	qscfg := annotation.QueryForOperation(field)
+	qureyOptBody := func(f string, fk string) []ast.Stmt {
+		//
+		return []ast.Stmt{
+			&ast.ExprStmt{
+				X: &ast.CallExpr{
+					Fun: &ast.SelectorExpr{
+						X:   ast.NewIdent(opHandle),
+						Sel: ast.NewIdent("Where"),
+					},
+					Args: []ast.Expr{
+						&ast.CallExpr{
+							Fun: &ast.SelectorExpr{
+								X: &ast.Ident{
+									Name: entityName,
+								},
+								Sel: ast.NewIdent(fk),
 							},
-							Sel: ast.NewIdent(fieldKey),
-						},
-						Args: []ast.Expr{
-							&ast.StarExpr{
-								X: &ast.SelectorExpr{
-									X:   ast.NewIdent("req"),
-									Sel: ast.NewIdent(utils.ToCamelCase(field.Name)),
+							Args: []ast.Expr{
+								&ast.StarExpr{
+									X: &ast.SelectorExpr{
+										X:   ast.NewIdent("req"),
+										Sel: ast.NewIdent(f),
+									},
 								},
 							},
 						},
 					},
 				},
 			},
-		},
+		}
 	}
+	list := qureyOptBody(utils.ToCamelCase(field.Name), fieldKey)
 
 	if field.Type != nil && field.Type.Type == field2.TypeEnum {
 		list = []ast.Stmt{
@@ -211,7 +218,7 @@ func fieldQueryStmt(entityName string, field *gen.Field) ast.Stmt {
 			},
 		}
 	}
-	return &ast.IfStmt{
+	eq := &ast.IfStmt{
 		Cond: &ast.BinaryExpr{
 			X: &ast.SelectorExpr{
 				X:   ast.NewIdent("req"),
@@ -224,6 +231,72 @@ func fieldQueryStmt(entityName string, field *gen.Field) ast.Stmt {
 			List: list,
 		},
 	}
+
+	if qscfg == nil {
+		return []ast.Stmt{eq}
+	}
+	if qscfg.Contain && field.Type.Type == field2.TypeString {
+		list = qureyOptBody(fieldKey, fieldKey+"Contains")
+		eq = &ast.IfStmt{
+			Cond: &ast.BinaryExpr{
+				X: &ast.SelectorExpr{
+					X:   ast.NewIdent("req"),
+					Sel: ast.NewIdent(utils.ToCamelCase(field.Name)),
+				},
+				Op: token.NEQ,
+				Y:  ast.NewIdent("nil"),
+			},
+			Body: &ast.BlockStmt{
+				List: list,
+			},
+		}
+	}
+
+	rest := []ast.Stmt{eq}
+	if qscfg.Regex && field.Type.Type == field2.TypeString {
+		fx := "Re_" + utils.ToCamelCase(field.Name)
+		fList := qureyOptBody(fx, fieldKey+"ContainsFold")
+		reFunc := &ast.IfStmt{
+			Cond: &ast.BinaryExpr{
+				X: &ast.SelectorExpr{
+					X:   ast.NewIdent("req"),
+					Sel: ast.NewIdent(fx),
+				},
+				Op: token.NEQ,
+				Y:  ast.NewIdent("nil"),
+			},
+			Body: &ast.BlockStmt{
+				List: fList,
+			},
+		}
+		rest = append(rest, reFunc)
+	}
+	if len(qscfg.Range) == 0 {
+		return rest
+	}
+	qsRange := utils.Set(qscfg.Range)
+	if qsRange == nil {
+		return rest
+	}
+	for _, s := range qsRange {
+		fx := utils.ToCamelCase(s) + utils.ToCamelCase(field.Name)
+		fList := qureyOptBody(fx, fieldKey+strings.ToUpper(s))
+		reFunc := &ast.IfStmt{
+			Cond: &ast.BinaryExpr{
+				X: &ast.SelectorExpr{
+					X:   ast.NewIdent("req"),
+					Sel: ast.NewIdent(fx),
+				},
+				Op: token.NEQ,
+				Y:  ast.NewIdent("nil"),
+			},
+			Body: &ast.BlockStmt{
+				List: fList,
+			},
+		}
+		rest = append(rest, reFunc)
+	}
+	return rest
 }
 
 func getEntityName(n *gen.Type) string {

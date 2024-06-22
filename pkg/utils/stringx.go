@@ -53,3 +53,16 @@ func PascalToCamel(s string) string {
 
 	return string(runes)
 }
+
+func Set(o []string) []string {
+
+	var exMap = map[string]bool{}
+	for _, s := range o {
+		exMap[s] = true
+	}
+	var rest []string
+	for s, _ := range exMap {
+		rest = append(rest, s)
+	}
+	return rest
+}

@@ -1,19 +1,21 @@
 package bo
 
 import (
-	"entgo.io/ent/entc/gen"
-	Tyfield2 "entgo.io/ent/schema/field"
 	"fmt"
-	"github.com/fatih/structtag"
-	"github.com/masseelch/elk/internal/consts"
-	"github.com/masseelch/elk/pkg/utils"
-	"github.com/masseelch/elk/pkg/utils/write"
 	"go/ast"
 	"go/token"
-	"golang.org/x/tools/go/ast/astutil"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"entgo.io/ent/entc/gen"
+	Tyfield2 "entgo.io/ent/schema/field"
+	"github.com/fatih/structtag"
+	"github.com/masseelch/elk/annotation"
+	"github.com/masseelch/elk/internal/consts"
+	"github.com/masseelch/elk/pkg/utils"
+	"github.com/masseelch/elk/pkg/utils/write"
+	"golang.org/x/tools/go/ast/astutil"
 )
 
 // 生成request param 数据
@@ -400,13 +402,19 @@ func doFieldDuty(field *gen.Field, n *gen.Type, fset *token.FileSet, file *ast.F
 }
 
 func queryFieldDuty(field *gen.Field, n *gen.Type, fset *token.FileSet, file *ast.File) []*ast.Field {
+
 	fn := utils.ToCamelCase(field.Name)
 	f := &ast.Field{
 		Names: []*ast.Ident{ast.NewIdent(fn)},
 		Type: &ast.StarExpr{
 			X: ast.NewIdent(field.Type.String()),
 		},
+		Tag: &ast.BasicLit{
+			Kind:  token.STRING,
+			Value: tagQuery(field, ""),
+		},
 	}
+
 	if field.Type.Type == Tyfield2.TypeEnum { // 屏蔽路径枚举
 		pkgName := strings.SplitN(field.Type.String(), ".", 2)[0]
 		pkgPath := path.Join(n.Config.Package, pkgName)
@@ -418,13 +426,51 @@ func queryFieldDuty(field *gen.Field, n *gen.Type, fset *token.FileSet, file *as
 			astutil.AddImport(fset, file, n.ID.Type.PkgPath)
 		}
 	}
-	f.Tag = &ast.BasicLit{
-		Kind:  token.STRING,
-		Value: tagQuery(field),
+	rest := []*ast.Field{f}
+
+	qscfg := annotation.QueryForOperation(field)
+	if qscfg == nil {
+		return rest
 	}
-	return []*ast.Field{f}
+	if qscfg.Regex {
+		ctFunc := &ast.Field{
+			Names: []*ast.Ident{ast.NewIdent("Re_" + fn)},
+			Type: &ast.StarExpr{
+				X: ast.NewIdent(field.Type.String()),
+			},
+			Tag: &ast.BasicLit{
+				Kind:  token.STRING,
+				Value: tagQuery(field, "re_"),
+			},
+		}
+		rest = append(rest, ctFunc)
+	}
+	if len(qscfg.Range) == 0 {
+		return rest
+	}
+	qsRange := utils.Set(qscfg.Range)
+	if qsRange == nil {
+		return rest
+	}
+	for _, s := range qsRange {
+		rest = append(rest, rangeFieldGen(s, field))
+	}
+	return rest
 }
 
+func rangeFieldGen(t string, f *gen.Field) *ast.Field {
+	return &ast.Field{
+		Names: []*ast.Ident{ast.NewIdent(utils.ToCamelCase(t) + utils.ToCamelCase(f.Name))},
+		Type: &ast.StarExpr{
+			X: ast.NewIdent(f.Type.String()),
+		},
+		Tag: &ast.BasicLit{
+			Kind:  token.STRING,
+			Value: tagQuery(f, t+"_"),
+		},
+	}
+
+}
 func tag(n *gen.Field) string {
 
 	tgs := structtag.Tags{}
@@ -437,29 +483,13 @@ func tag(n *gen.Field) string {
 	return tag2String(tgs)
 }
 
-func tagQuery(n *gen.Field) string {
+func tagQuery(n *gen.Field, pr string) string {
 	tgs := structtag.Tags{}
 	_ = tgs.Set(&structtag.Tag{
 		Key:     "json",
-		Name:    n.Name,
+		Name:    pr + n.Name,
 		Options: []string{"omitempty"},
 	})
-	if n.Annotations == nil {
-		return fmt.Sprintf("`%s`", tgs.String())
-	}
-
-	//@todo 参数验证规则
-	//for s, a := range n.Annotations {
-	//	if s=="validate" {
-	//
-	//		_ = tgs.Set(&structtag.Tag{
-	//			Key:     "validate",
-	//			Name:    ,
-	//			Options: []string{"omitempty"},
-	//		})
-	//	}
-	//}
-
 	return tag2String(tgs)
 }
 func tag2String(tgs structtag.Tags) string {

@@ -57,10 +57,10 @@ func listImp(n *gen.Type) *ast.FuncDecl {
 
 	// id 过滤
 	entityName := getEntityName(n)
-	bodyStmt = append(bodyStmt, fieldQueryStmt(entityName, n.ID))
+	bodyStmt = append(bodyStmt, fieldQueryStmt(entityName, n.ID)...)
 	//// 设置数据
 	for _, field := range n.Fields {
-		bodyStmt = append(bodyStmt, fieldQueryStmt(entityName, field))
+		bodyStmt = append(bodyStmt, fieldQueryStmt(entityName, field)...)
 	}
 
 	const countHandle = "total"
