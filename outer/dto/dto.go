@@ -2,19 +2,19 @@ package dto
 
 import (
 	"fmt"
-	"github.com/liuchamp/elk/internal/consts"
-	"github.com/liuchamp/elk/pkg/utils/write"
 	"go/ast"
 	"go/token"
 	"path"
 	"path/filepath"
 	"strings"
 
-	"golang.org/x/tools/go/ast/astutil"
-
 	"entgo.io/ent/entc/gen"
 	Tyfield2 "entgo.io/ent/schema/field"
 	"github.com/fatih/structtag"
+	"github.com/liuchamp/elk/internal/consts"
+	"github.com/liuchamp/elk/pkg/utils/write"
+	"golang.org/x/tools/go/ast/astutil"
+
 	"github.com/liuchamp/elk/pkg/utils"
 )
 
@@ -26,7 +26,8 @@ func DtoOuter(g *gen.Graph, pr string) error {
 			return err
 		}
 	}
-	return nil
+
+	return genUtilFile(pr)
 }
 
 const suffix = consts.DtoSuffix
