@@ -5,8 +5,8 @@ import (
 	"go/token"
 	"path/filepath"
 
-	"github.com/masseelch/elk/internal/consts"
-	"github.com/masseelch/elk/pkg/utils/write"
+	"github.com/liuchamp/elk/internal/consts"
+	"github.com/liuchamp/elk/pkg/utils/write"
 )
 
 func genUtilFile(pr string) error {

@@ -4,7 +4,7 @@ import (
 	"entgo.io/ent/entc/gen"
 	"errors"
 	"fmt"
-	"github.com/masseelch/elk/serialization"
+	"github.com/liuchamp/elk/serialization"
 )
 
 const (

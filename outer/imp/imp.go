@@ -2,7 +2,7 @@ package imp
 
 import (
 	"fmt"
-	"github.com/masseelch/elk/pkg/utils/write"
+	"github.com/liuchamp/elk/pkg/utils/write"
 	"go/ast"
 	"go/token"
 	"path"
@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"entgo.io/ent/entc/gen"
-	"github.com/masseelch/elk/internal/consts"
-	"github.com/masseelch/elk/pkg/utils"
+	"github.com/liuchamp/elk/internal/consts"
+	"github.com/liuchamp/elk/pkg/utils"
 	"golang.org/x/tools/go/ast/astutil"
 )
 

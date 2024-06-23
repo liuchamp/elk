@@ -2,8 +2,8 @@ package dto
 
 import (
 	"fmt"
-	"github.com/masseelch/elk/internal/consts"
-	"github.com/masseelch/elk/pkg/utils/write"
+	"github.com/liuchamp/elk/internal/consts"
+	"github.com/liuchamp/elk/pkg/utils/write"
 	"go/ast"
 	"go/token"
 	"path"
@@ -15,7 +15,7 @@ import (
 	"entgo.io/ent/entc/gen"
 	Tyfield2 "entgo.io/ent/schema/field"
 	"github.com/fatih/structtag"
-	"github.com/masseelch/elk/pkg/utils"
+	"github.com/liuchamp/elk/pkg/utils"
 )
 
 // DtoOuter  pr 前缀

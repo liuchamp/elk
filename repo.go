@@ -3,11 +3,11 @@ package elk
 import (
 	"entgo.io/ent/entc/gen"
 	"fmt"
-	"github.com/masseelch/elk/outer/bo"
-	"github.com/masseelch/elk/outer/def"
-	"github.com/masseelch/elk/outer/dto"
-	"github.com/masseelch/elk/outer/imp"
-	"github.com/masseelch/elk/outer/router"
+	"github.com/liuchamp/elk/outer/bo"
+	"github.com/liuchamp/elk/outer/def"
+	"github.com/liuchamp/elk/outer/dto"
+	"github.com/liuchamp/elk/outer/imp"
+	"github.com/liuchamp/elk/outer/router"
 	"path/filepath"
 )
 

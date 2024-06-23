@@ -2,14 +2,14 @@ package imp
 
 import (
 	field2 "entgo.io/ent/schema/field"
-	"github.com/masseelch/elk/annotation"
+	"github.com/liuchamp/elk/annotation"
 	"go/ast"
 	"go/token"
 	"strings"
 
 	"entgo.io/ent/entc/gen"
-	"github.com/masseelch/elk/internal/consts"
-	"github.com/masseelch/elk/pkg/utils"
+	"github.com/liuchamp/elk/internal/consts"
+	"github.com/liuchamp/elk/pkg/utils"
 )
 
 func getImp(n *gen.Type) *ast.FuncDecl {

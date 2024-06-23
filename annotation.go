@@ -3,8 +3,8 @@ package elk
 import (
 	"encoding/json"
 	"entgo.io/ent/schema"
-	"github.com/masseelch/elk/serialization"
-	"github.com/masseelch/elk/spec"
+	"github.com/liuchamp/elk/serialization"
+	"github.com/liuchamp/elk/spec"
 )
 
 // SchemaAnnotation annotates an entity with metadata for templates.

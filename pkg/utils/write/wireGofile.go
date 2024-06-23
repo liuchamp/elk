@@ -2,7 +2,7 @@ package write
 
 import (
 	"bytes"
-	"github.com/masseelch/elk/pkg/utils"
+	"github.com/liuchamp/elk/pkg/utils"
 	"go/ast"
 	"go/format"
 	"go/printer"

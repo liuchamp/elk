@@ -2,8 +2,8 @@ package imp
 
 import (
 	"entgo.io/ent/entc/gen"
-	"github.com/masseelch/elk/internal/consts"
-	"github.com/masseelch/elk/pkg/utils"
+	"github.com/liuchamp/elk/internal/consts"
+	"github.com/liuchamp/elk/pkg/utils"
 	"go/ast"
 	"go/token"
 )

@@ -1,4 +1,4 @@
-module github.com/masseelch/elk
+module github.com/liuchamp/elk
 
 go 1.22.3
 

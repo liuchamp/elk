@@ -3,7 +3,7 @@ package elk
 import (
 	"entgo.io/ent/entc/gen"
 	"fmt"
-	"github.com/masseelch/elk/serialization"
+	"github.com/liuchamp/elk/serialization"
 	"hash/fnv"
 )
 

@@ -29,7 +29,7 @@ their [documentation](https://entgo.io/docs/getting-started).
 The first step is to add the `elk` package to your project:
 
 ```shell
-go get github.com/masseelch/elk
+go get github.com/liuchamp/elk
 ```
 
 `elk` uses the Ent [Extension API](https://entgo.io/docs/extensions) to integrate with Ent’s code-generation. This
@@ -49,7 +49,7 @@ import (
 
 	"entgo.io/ent/entc"
 	"entgo.io/ent/entc/gen"
-	"github.com/masseelch/elk"
+	"github.com/liuchamp/elk"
 )
 
 func main() {
@@ -93,8 +93,8 @@ go generate ./...
 In addition to the files Ent would normally generate, another directory named `ent/http` and a file named `openapi.json`
 was created. The `ent/http` directory contains the code for the `elk`-generated HTTP CRUD handlers while `openapi.json`
 contains the OpenAPI Specification. Feel free to have a look
-at [this example spec file](https://github.com/masseelch/elk/tree/master/internal/simple/ent/openapo.json)
-and [the implementing server code](https://github.com/masseelch/elk/tree/master/internal/simple/ent/http).
+at [this example spec file](https://github.com/liuchamp/elk/tree/master/internal/simple/ent/openapo.json)
+and [the implementing server code](https://github.com/liuchamp/elk/tree/master/internal/simple/ent/http).
 
 If you want to generate a client matching the spec as well, you can user the following function and call it after
 generating the spec in `entc.go`
@@ -311,7 +311,7 @@ import (
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"github.com/masseelch/elk"
+	"github.com/liuchamp/elk"
 )
 
 // Pet holds the schema definition for the Pet entity.
@@ -357,7 +357,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"github.com/masseelch/elk"
+	"github.com/liuchamp/elk"
 )
 
 // User holds the schema definition for the User entity.
@@ -415,7 +415,7 @@ import (
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"github.com/masseelch/elk"
+	"github.com/liuchamp/elk"
 )
 
 // Pet holds the schema definition for the Pet entity.
@@ -517,9 +517,9 @@ import (
 
 	"entgo.io/ent/entc"
 	"entgo.io/ent/entc/gen"
-	"github.com/masseelch/elk"
-	"github.com/masseelch/elk/policy"
-	"github.com/masseelch/elk/spec"
+	"github.com/liuchamp/elk"
+	"github.com/liuchamp/elk/policy"
+	"github.com/liuchamp/elk/spec"
 )
 
 func main() {
@@ -550,7 +550,7 @@ import (
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"github.com/masseelch/elk"
+	"github.com/liuchamp/elk"
 )
 
 // User holds the schema definition for the User entity.
@@ -568,7 +568,7 @@ func (User) Annotations() []schema.Annotation {
 ```
 
 For more information about how to configure `elk` and what it can do have a look at
-the [docs](https://pkg.go.dev/github.com/masseelch/elk) [integration test setup](https://github.com/masseelch/elk/tree/master/internal)
+the [docs](https://pkg.go.dev/github.com/liuchamp/elk) [integration test setup](https://github.com/liuchamp/elk/tree/master/internal)
 .
 
 ## Known Issues and Outlook
@@ -581,5 +581,5 @@ the [docs](https://pkg.go.dev/github.com/masseelch/elk) [integration test setup]
 ## Contribution
 
 `elk` has not reach its first release yet but the API can be considered somewhat stable. I welcome any suggestion or
-feedback and if you are willing to help I'd be very glad. The [issues tab](https://github.com/masseelch/elk/issues) is a
+feedback and if you are willing to help I'd be very glad. The [issues tab](https://github.com/liuchamp/elk/issues) is a
 wonderful place for you to reach out for help, feedback, suggestions and contribution.
