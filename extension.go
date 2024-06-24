@@ -19,7 +19,7 @@ type (
 	Extension struct {
 		entc.DefaultExtension
 		repoConfig RepoConfig
-		docCfg     DocConfig
+		specHooks  []Hook
 		hooks      []gen.Hook
 		templates  []*gen.Template
 		config     *Config
