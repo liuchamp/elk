@@ -19,6 +19,10 @@ type SchemaAnnotation struct {
 	DeletePolicy Policy
 	// ListPolicy defines if a list handler should be generated.
 	ListPolicy Policy
+
+	// PatchPolicy defines if a patch handler should be generated.
+	PatchPolicy Policy
+
 	// CreateGroups holds the serializations groups to use on the creation handler.
 	CreateGroups serialization.Groups
 	// ReadGroups holds the serializations groups to use on the read handler.

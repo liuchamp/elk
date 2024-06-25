@@ -38,7 +38,7 @@ func viewSchemas(g *gen.Graph, s *openapi3.T) error {
 	}
 	// Create a schema for every view.
 	for n, v := range vs {
-		fs := make(spec.Fields, len(v.Fields))
+		fs := openapi3.Schemas{}
 		// We can already add the schema fields.
 		for _, f := range v.Fields {
 			sf, err := newField(f)
@@ -47,45 +47,49 @@ func viewSchemas(g *gen.Graph, s *openapi3.T) error {
 			}
 			fs[f.Name] = sf
 		}
-		s.Components.Schemas[n] = &spec.Schema{
-			Name:   n,
-			Fields: fs,
+		s.Components.Schemas[n] = &openapi3.SchemaRef{
+			Value: &openapi3.Schema{
+				Type:       &openapi3.Types{"object"},
+				Properties: fs,
+			},
 		}
 	}
 	// Loop over the views again and this time fill the edges.
-	for n, v := range vs {
-		es := make(spec.Edges, len(v.Edges))
-		for _, e := range v.Edges {
-			es[e.Edge.Name] = spec.Edge{
-				Ref:    s.Components.Schemas[e.Name],
-				Unique: e.Unique,
-			}
-		}
-		s.Components.Schemas[n].Edges = es
-	}
+	//for n, v := range vs {
+	//	es := make(spec.Edges, len(v.Edges))
+	//	for _, e := range v.Edges {
+	//		es[e.Edge.Name] = spec.Edge{
+	//			Ref:    s.Components.Schemas[e.Name],
+	//			Unique: e.Unique,
+	//		}
+	//	}
+	//	s.Components.Schemas[n].Edges = es
+	//}
 	return nil
 }
 
 // newField constructs a spec.Field out of a gen.Field.
-func newField(f *gen.Field) (*spec.Field, error) {
+func newField(f *gen.Field) (*openapi3.SchemaRef, error) {
 	t, err := oasType(f)
 	if err != nil {
 		return nil, err
 	}
-	e, err := exampleValue(f)
-	if err != nil {
-		return nil, err
-	}
-	return &spec.Field{
-		Unique:   true,
-		Required: !f.Optional,
-		Type:     *t,
-		Example:  e,
+	//e, err := exampleValue(f)
+	//if err != nil {
+	//	return nil, err
+	//}
+	return &openapi3.SchemaRef{
+
+		Value: &openapi3.Schema{
+			Type: t,
+			//Example: e,
+			//Required: !f.Optional,
+		},
 	}, nil
 }
 
 // paths adds all views to the specs schemas.
-func paths(g *gen.Graph, s *spec.Spec) error {
+func paths(g *gen.Graph, s *openapi3.T) error {
 	for _, n := range g.Nodes {
 		// Add schema operations.
 		ops, err := nodeOperations(n)
@@ -475,23 +479,24 @@ func edgeAnnotation(e *gen.Edge) (*Annotation, error) {
 }
 
 // oasType returns the spec.Type to use for the given field.
-func oasType(f *gen.Field) (*spec.Type, error) {
+func oasType(f *gen.Field) (*openapi3.Types, error) {
 	if f.IsEnum() {
 		return _string, nil
 	}
 
 	s := f.Type.String()
 	if strings.Contains(s, "[]") {
-		ending := strings.Replace(s, "[]", "", 1)
-		t, ok := oasTypes[ending]
-		if !ok {
-			return nil, fmt.Errorf("no OAS-type exists for %q", s)
-		}
-		return &spec.Type{
-			Type:   "array",
-			Format: t.Format,
-			Items:  t,
-		}, nil
+		return &openapi3.Types{"array"}, nil
+		//ending := strings.Replace(s, "[]", "", 1)
+		//t, ok := oasTypes[ending]
+		//if !ok {
+		//	return nil, fmt.Errorf("no OAS-type exists for %q", s)
+		//}
+		//return &spec.Type{
+		//	Type:   "array",
+		//	Format: t.Format,
+		//	Items:  t,
+		//}, nil
 	}
 	t, ok := oasTypes[s]
 	if !ok {

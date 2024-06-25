@@ -13,6 +13,7 @@ const (
 	opUpdate = "update"
 	opDelete = "delete"
 	opList   = "list"
+	opPatch  = "patch"
 )
 
 // groupsForOperation returns the requested groups for a given type and operation.

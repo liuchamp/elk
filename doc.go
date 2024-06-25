@@ -95,9 +95,9 @@ func generate(g *gen.Graph) GenerateFunc {
 			return err
 		}
 		// Add all error responses.
-		errResponses(s)
+		//errResponses(s)
 		// Create the paths.
-		if err := paths(g, s); err != nil {
+		if err := paths(g, t); err != nil {
 			return err
 		}
 		return nil

@@ -137,6 +137,9 @@ func nodeOperations(n *gen.Type) ([]string, error) {
 		if ant.ListPolicy == Expose || (ant.ListPolicy == None && c.HandlerPolicy == Expose) {
 			ops = append(ops, opList)
 		}
+		if ant.PatchPolicy == Expose || (ant.PatchPolicy == None && c.HandlerPolicy == Expose) {
+			ops = append(ops, opPatch)
+		}
 		return ops, nil
 	}
 }
