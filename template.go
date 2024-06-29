@@ -109,7 +109,7 @@ func nodeOperations(n *gen.Type) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	ops := []string{opCreate, opRead, opUpdate, opDelete, opList}
+	ops := []string{opCreate, opRead, opUpdate, opPatch, opDelete, opList}
 	ant := &SchemaAnnotation{}
 	// If no policies are given follow the global policy.
 	if n.Annotations == nil || n.Annotations[ant.Name()] == nil {
