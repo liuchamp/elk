@@ -38,6 +38,7 @@ func serviceHeader(g *gen.Graph) (*token.FileSet, *ast.File) {
 	astutil.AddNamedImport(fset, file, consts.DefsvPkgName, consts.GetDefPackageName(g.Package))
 	astutil.AddNamedImport(fset, file, consts.BoPkgName, consts.GetBoPackageName(g.Package))
 	astutil.AddNamedImport(fset, file, consts.DtoPkgName, consts.GetDtoPackageName(g.Package))
+	astutil.AddNamedImport(fset, file, "ent", g.Package)
 
 	return fset, file
 }
