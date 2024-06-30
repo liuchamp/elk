@@ -8,6 +8,7 @@ import (
 	"github.com/liuchamp/elk/pkg/utils"
 	"go/ast"
 	"go/token"
+	"strings"
 )
 
 func updateImp(n *gen.Type) *ast.FuncDecl {
@@ -63,6 +64,9 @@ func updateImp(n *gen.Type) *ast.FuncDecl {
 		if entool.CheckIgnoreSetField(field.Name) {
 			continue
 		}
+		if strings.HasSuffix(field.Name, "_id") {
+			continue
+		}
 		fn := entool.SetNameGen(field)
 		if fn == "" {
 			continue
@@ -71,7 +75,7 @@ func updateImp(n *gen.Type) *ast.FuncDecl {
 			X: &ast.CallExpr{
 				Fun: &ast.SelectorExpr{
 					X:   ast.NewIdent(opHandle),
-					Sel: ast.NewIdent(fmt.Sprintf("Set%s", utils.ToCamelCase(field.Name))),
+					Sel: ast.NewIdent(fmt.Sprintf("Set%s", fn)),
 				},
 				Args: []ast.Expr{&ast.SelectorExpr{
 					X:   ast.NewIdent("req"),

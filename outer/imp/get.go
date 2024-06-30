@@ -3,6 +3,7 @@ package imp
 import (
 	field2 "entgo.io/ent/schema/field"
 	"github.com/liuchamp/elk/annotation"
+	"github.com/liuchamp/elk/pkg/entool"
 	"go/ast"
 	"go/token"
 	"strings"
@@ -134,7 +135,7 @@ func getImp(n *gen.Type) *ast.FuncDecl {
 
 func fieldQueryStmt(entityName string, field *gen.Field) []ast.Stmt {
 	const opHandle = "query"
-	fieldKey := utils.ToCamelCase(field.Name)
+	fieldKey := entool.SetNameGen(field)
 	if fieldKey == "Id" {
 		fieldKey = "ID"
 	}

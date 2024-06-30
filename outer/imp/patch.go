@@ -7,6 +7,7 @@ import (
 	"github.com/liuchamp/elk/pkg/utils"
 	"go/ast"
 	"go/token"
+	"strings"
 )
 
 func patchImp(n *gen.Type) *ast.FuncDecl {
@@ -61,6 +62,9 @@ func patchImp(n *gen.Type) *ast.FuncDecl {
 	// 设置数据
 	for _, field := range n.Fields {
 		if entool.CheckIgnoreSetField(field.Name) {
+			continue
+		}
+		if strings.HasSuffix(field.Name, "_id") {
 			continue
 		}
 		fn := entool.SetNameGen(field)
