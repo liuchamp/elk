@@ -60,6 +60,9 @@ func updateImp(n *gen.Type) *ast.FuncDecl {
 
 	// 设置数据
 	for _, field := range n.Fields {
+		if entool.CheckIgnoreSetField(field.Name) {
+			continue
+		}
 		fn := entool.SetNameGen(field)
 		if fn == "" {
 			continue

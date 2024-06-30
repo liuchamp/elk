@@ -12,7 +12,7 @@ var ignoreFields = []string{
 	"updated_at",
 }
 
-func checkIgnoreSetField(n string) bool {
+func CheckIgnoreSetField(n string) bool {
 	for _, field := range ignoreFields {
 		if field == n {
 			return true
@@ -24,9 +24,6 @@ func checkIgnoreSetField(n string) bool {
 var psFieldSuffixs = []string{"_id", "_ip"}
 
 func SetNameGen(field *gen.Field) string {
-	if checkIgnoreSetField(field.Name) {
-		return ""
-	}
 	fn := strcase.UpperCamelCase(field.Name)
 	for _, suffix := range psFieldSuffixs {
 		if strings.HasSuffix(field.Name, suffix) {
