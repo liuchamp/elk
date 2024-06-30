@@ -69,7 +69,7 @@ func viewSchemas(g *gen.Graph, s *openapi3.T) error {
 		return err
 	}
 	// Create a schema for every view.
-	for n, v := range vs {
+	for _, v := range vs {
 		fs := openapi3.Schemas{}
 		// We can already add the schema fields.
 		for _, f := range v.Fields {
@@ -79,7 +79,7 @@ func viewSchemas(g *gen.Graph, s *openapi3.T) error {
 			}
 			fs[f.Name] = sf
 		}
-		s.Components.Schemas[n] = &openapi3.SchemaRef{
+		s.Components.Schemas[v.Node.Name] = &openapi3.SchemaRef{
 			Value: &openapi3.Schema{
 				Type:       &openapi3.Types{"object"},
 				Properties: fs,
@@ -111,7 +111,6 @@ func newField(f *gen.Field) (*openapi3.SchemaRef, error) {
 	//	return nil, err
 	//}
 	return &openapi3.SchemaRef{
-
 		Value: &openapi3.Schema{
 			Type: t,
 			//Example: e,
@@ -201,8 +200,8 @@ func requestBody(n *gen.Type, method string) (*openapi3.RequestBodyRef, error) {
 
 	var rq []string
 	for _, field := range n.Fields {
-		tps, ok := oasTypes[field.Type.String()]
-		if !ok {
+		tps, err := oasType(field)
+		if err != nil {
 			return nil, fmt.Errorf("cat not support type %s", field.Type.String())
 		}
 		v := &openapi3.Schema{Type: tps}
@@ -403,7 +402,7 @@ func deleteOp(s *openapi3.T, n *gen.Type) (*openapi3.Operation, error) {
 	resp := openapi3.WithStatus(200, &openapi3.ResponseRef{
 		Value: openapi3.NewResponse().
 			WithDescription(fmt.Sprintf("delete a  %s ok ", n.Name)).
-			WithContent(openapi3.NewContentWithJSONSchemaRef(openapi3.NewSchemaRef("#/components/response/Delete", nil))),
+			WithContent(openapi3.NewContentWithJSONSchemaRef(openapi3.NewSchemaRef("#/components/responses/"+DeletedKey, nil))),
 	})
 
 	errResp := optStatus()
@@ -439,10 +438,25 @@ func listOp(s *openapi3.T, n *gen.Type) (*openapi3.Operation, error) {
 		Type:  &openapi3.Types{openapi3.TypeArray},
 		Items: openapi3.NewSchemaRef("#/components/schemas/"+strcase.UpperCamelCase(n.Name), nil),
 	})
+	//resp := openapi3.WithStatus(200, &openapi3.ResponseRef{
+	//	Value: openapi3.NewResponse().
+	//		WithDescription(fmt.Sprintf("query list  %s ok ", n.Name)).
+	//		WithContent(openapi3.NewContentWithJSONSchemaRef(respbody)),
+	//})
+	pagePro := openapi3.Schemas{
+		"total": openapi3.NewSchemaRef("", &openapi3.Schema{Type: &openapi3.Types{openapi3.TypeInteger}}),
+		"data":  respbody,
+	}
+	respbodyPage := openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:       &openapi3.Types{openapi3.TypeObject},
+			Properties: pagePro,
+		},
+	}
 	resp := openapi3.WithStatus(200, &openapi3.ResponseRef{
 		Value: openapi3.NewResponse().
 			WithDescription(fmt.Sprintf("query list  %s ok ", n.Name)).
-			WithContent(openapi3.NewContentWithJSONSchemaRef(respbody)),
+			WithContent(openapi3.NewContentWithJSONSchemaRef(&respbodyPage)),
 	})
 
 	errResp := optStatus()
@@ -576,9 +590,9 @@ func oasType(f *gen.Field) (*openapi3.Types, error) {
 
 func optStatus(opts ...int) []openapi3.NewResponsesOption {
 	optErrMap := map[int]openapi3.NewResponsesOption{
-		http.StatusBadRequest:          openapi3.WithStatus(http.StatusBadRequest, &openapi3.ResponseRef{Ref: "#/components/schemas/400"}),
-		http.StatusNotFound:            openapi3.WithStatus(http.StatusNotFound, &openapi3.ResponseRef{Ref: "#/components/schemas/404"}),
-		http.StatusInternalServerError: openapi3.WithStatus(http.StatusInternalServerError, &openapi3.ResponseRef{Ref: "#/components/schemas/500"}),
+		http.StatusBadRequest:          openapi3.WithStatus(http.StatusBadRequest, &openapi3.ResponseRef{Ref: "#/components/responses/" + ValidationErrorKey}),
+		http.StatusNotFound:            openapi3.WithStatus(http.StatusNotFound, &openapi3.ResponseRef{Ref: "#/components/responses/" + NotFoundKey}),
+		http.StatusInternalServerError: openapi3.WithStatus(http.StatusInternalServerError, &openapi3.ResponseRef{Ref: "#/components/responses/" + ServerErrorKey}),
 	}
 	var rest []openapi3.NewResponsesOption
 	if opts == nil {
@@ -593,5 +607,56 @@ func optStatus(opts ...int) []openapi3.NewResponsesOption {
 		}
 	}
 	return rest
+}
 
+const (
+	NotFoundKey        = "NotFound"
+	ValidationErrorKey = "ValidationError"
+	ServerErrorKey     = "ServerError"
+	DeletedKey         = "Deleted"
+)
+
+const (
+	normalFileCode = "code"
+	normalFileMsg  = "msg"
+)
+
+func errResponses(s *openapi3.T) error {
+	// 404
+	notFdFs := openapi3.Schemas{}
+	notFdFs[normalFileCode] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{Type: &openapi3.Types{openapi3.TypeInteger}},
+	}
+	notFdFs[normalFileMsg] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{Type: &openapi3.Types{openapi3.TypeInteger}},
+	}
+	s.Components.Responses[NotFoundKey] = &openapi3.ResponseRef{
+		Value: openapi3.NewResponse().WithDescription("source not exists").WithContent(openapi3.NewContentWithJSONSchema(&openapi3.Schema{
+			Type:       &openapi3.Types{openapi3.TypeObject},
+			Properties: notFdFs,
+		})),
+	}
+	// param error
+	s.Components.Responses[ValidationErrorKey] = &openapi3.ResponseRef{
+		Value: openapi3.NewResponse().WithDescription("param error,please check!!!").WithContent(openapi3.NewContentWithJSONSchema(&openapi3.Schema{
+			Type:       &openapi3.Types{openapi3.TypeObject},
+			Properties: notFdFs,
+		})),
+	}
+	// server not can use
+	s.Components.Responses[ServerErrorKey] = &openapi3.ResponseRef{
+		Value: openapi3.NewResponse().WithDescription("system error").WithContent(openapi3.NewContentWithJSONSchema(&openapi3.Schema{
+			Type:       &openapi3.Types{openapi3.TypeObject},
+			Properties: notFdFs,
+		})),
+	}
+	// deleted
+	s.Components.Responses[DeletedKey] = &openapi3.ResponseRef{
+		Value: openapi3.NewResponse().WithDescription("deleted ok").WithContent(openapi3.NewContentWithJSONSchema(&openapi3.Schema{
+			Type:       &openapi3.Types{openapi3.TypeObject},
+			Properties: notFdFs,
+		})),
+	}
+
+	return nil
 }

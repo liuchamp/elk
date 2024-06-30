@@ -2,12 +2,13 @@ package elk
 
 import (
 	"encoding/json"
-	"entgo.io/ent/entc/gen"
 	"errors"
 	"io"
 	"os"
+
+	"entgo.io/ent/entc/gen"
+	"github.com/getkin/kin-openapi/openapi3"
 )
-import "github.com/getkin/kin-openapi/openapi3"
 
 type DocConfig struct {
 	Title       string
@@ -61,9 +62,8 @@ func (e *Extension) SpecGenerator(out string) gen.Hook {
 func initSpec() *openapi3.T {
 	return &openapi3.T{
 		Extensions: nil,
-		OpenAPI:    "",
+		OpenAPI:    "3.0.3",
 		Components: &openapi3.Components{
-
 			Schemas:       openapi3.Schemas{},
 			Parameters:    openapi3.ParametersMap{},
 			Headers:       openapi3.Headers{},
@@ -95,7 +95,9 @@ func generate(g *gen.Graph) GenerateFunc {
 			return err
 		}
 		// Add all error responses.
-		//errResponses(s)
+		if err := errResponses(t); err != nil {
+			return err
+		}
 		// Create the paths.
 		if err := paths(g, t); err != nil {
 			return err
