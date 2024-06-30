@@ -2,6 +2,7 @@ package dto
 
 import (
 	"fmt"
+	"github.com/liuchamp/elk/pkg/entool"
 	"go/ast"
 	"go/token"
 	"path"
@@ -14,8 +15,6 @@ import (
 	"github.com/liuchamp/elk/internal/consts"
 	"github.com/liuchamp/elk/pkg/utils/write"
 	"golang.org/x/tools/go/ast/astutil"
-
-	"github.com/liuchamp/elk/pkg/utils"
 )
 
 // DtoOuter  pr 前缀
@@ -45,8 +44,7 @@ func genDto(g *gen.Graph, pr string, n *gen.Type) error {
 		Name: ast.NewIdent(dtoPkgName),
 	}
 	// 创建导入语句
-	pkgNameEntroot := filepath.Base(n.Config.Package)
-	astutil.AddNamedImport(fset, file, pkgNameEntroot, n.Config.Package)
+	astutil.AddNamedImport(fset, file, "ent", n.Config.Package)
 
 	// 创建结构体声明
 	var dtoFields []*ast.Field
@@ -154,7 +152,7 @@ func genDto(g *gen.Graph, pr string, n *gen.Type) error {
 }
 
 func funcFieldDuty(field *gen.Field, n *gen.Type, fset *token.FileSet, file *ast.File) (string, *ast.Field) {
-	fn := utils.ToCamelCase(field.Name)
+	fn := entool.SetNameGen(field)
 	f := &ast.Field{
 		Names: []*ast.Ident{ast.NewIdent(fn)},
 		Type:  ast.NewIdent(field.Type.String()),

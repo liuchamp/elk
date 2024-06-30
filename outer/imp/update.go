@@ -1,15 +1,13 @@
 package imp
 
 import (
+	"entgo.io/ent/entc/gen"
 	"fmt"
-	"github.com/stoewer/go-strcase"
+	"github.com/liuchamp/elk/internal/consts"
+	"github.com/liuchamp/elk/pkg/entool"
+	"github.com/liuchamp/elk/pkg/utils"
 	"go/ast"
 	"go/token"
-	"strings"
-
-	"entgo.io/ent/entc/gen"
-	"github.com/liuchamp/elk/internal/consts"
-	"github.com/liuchamp/elk/pkg/utils"
 )
 
 func updateImp(n *gen.Type) *ast.FuncDecl {
@@ -62,7 +60,7 @@ func updateImp(n *gen.Type) *ast.FuncDecl {
 
 	// 设置数据
 	for _, field := range n.Fields {
-		fn := SetNameGen(field)
+		fn := entool.SetNameGen(field)
 		if fn == "" {
 			continue
 		}
@@ -147,20 +145,4 @@ func updateImp(n *gen.Type) *ast.FuncDecl {
 		List: bodyStmt,
 	}
 	return createMethod(mpsv, getImpStructName(n), consts.DefUpdateFuncName, createParams, createResults, createBody)
-}
-
-var psFieldSuffixs = []string{"_id", "_ip"}
-
-func SetNameGen(field *gen.Field) string {
-	if checkIgnoreSetField(field.Name) {
-		return ""
-	}
-	fn := strcase.UpperCamelCase(field.Name)
-	for _, suffix := range psFieldSuffixs {
-		if strings.HasSuffix(field.Name, suffix) {
-			fn = fmt.Sprintf("%s%s", strcase.UpperCamelCase(strings.TrimSuffix(field.Name, suffix)), strings.ToUpper(strings.TrimPrefix(suffix, "_")))
-			break
-		}
-	}
-	return fn
 }

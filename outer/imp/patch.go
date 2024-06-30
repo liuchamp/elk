@@ -3,6 +3,7 @@ package imp
 import (
 	"entgo.io/ent/entc/gen"
 	"github.com/liuchamp/elk/internal/consts"
+	"github.com/liuchamp/elk/pkg/entool"
 	"github.com/liuchamp/elk/pkg/utils"
 	"go/ast"
 	"go/token"
@@ -59,7 +60,7 @@ func patchImp(n *gen.Type) *ast.FuncDecl {
 
 	// 设置数据
 	for _, field := range n.Fields {
-		fn := SetNameGen(field)
+		fn := entool.SetNameGen(field)
 		if fn == "" {
 			continue
 		}

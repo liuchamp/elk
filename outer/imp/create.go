@@ -4,24 +4,11 @@ import (
 	"entgo.io/ent/entc/gen"
 	"fmt"
 	"github.com/liuchamp/elk/internal/consts"
+	"github.com/liuchamp/elk/pkg/entool"
 	"github.com/liuchamp/elk/pkg/utils"
 	"go/ast"
 	"go/token"
 )
-
-var ignoreFields = []string{
-	"created_at",
-	"updated_at",
-}
-
-func checkIgnoreSetField(n string) bool {
-	for _, field := range ignoreFields {
-		if field == n {
-			return true
-		}
-	}
-	return false
-}
 
 func saveImp(n *gen.Type) *ast.FuncDecl {
 	const mpsv = "imc"
@@ -67,7 +54,7 @@ func saveImp(n *gen.Type) *ast.FuncDecl {
 
 	// 设置数据
 	for _, field := range n.Fields {
-		fn := SetNameGen(field)
+		fn := entool.SetNameGen(field)
 		if fn == "" {
 			continue
 		}
