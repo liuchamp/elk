@@ -1,12 +1,11 @@
 package imp
 
 import (
-	"go/ast"
-	"go/token"
-
 	"entgo.io/ent/entc/gen"
 	"github.com/liuchamp/elk/internal/consts"
 	"github.com/liuchamp/elk/pkg/utils"
+	"go/ast"
+	"go/token"
 )
 
 func patchImp(n *gen.Type) *ast.FuncDecl {
@@ -60,6 +59,11 @@ func patchImp(n *gen.Type) *ast.FuncDecl {
 
 	// 设置数据
 	for _, field := range n.Fields {
+		fn := SetNameGen(field)
+		if fn == "" {
+			continue
+		}
+
 		bodyStmt = append(bodyStmt, &ast.IfStmt{
 			Cond: &ast.BinaryExpr{
 				X: &ast.SelectorExpr{
@@ -75,7 +79,7 @@ func patchImp(n *gen.Type) *ast.FuncDecl {
 						X: &ast.CallExpr{
 							Fun: &ast.SelectorExpr{
 								X:   ast.NewIdent(opHandle),
-								Sel: ast.NewIdent("Set" + utils.ToCamelCase(field.Name)),
+								Sel: ast.NewIdent("Set" + fn),
 							},
 							Args: []ast.Expr{
 								&ast.StarExpr{

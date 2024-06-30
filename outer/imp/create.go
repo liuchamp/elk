@@ -9,6 +9,20 @@ import (
 	"go/token"
 )
 
+var ignoreFields = []string{
+	"created_at",
+	"updated_at",
+}
+
+func checkIgnoreSetField(n string) bool {
+	for _, field := range ignoreFields {
+		if field == n {
+			return true
+		}
+	}
+	return false
+}
+
 func saveImp(n *gen.Type) *ast.FuncDecl {
 	const mpsv = "imc"
 	// Create
@@ -53,11 +67,15 @@ func saveImp(n *gen.Type) *ast.FuncDecl {
 
 	// 设置数据
 	for _, field := range n.Fields {
+		fn := SetNameGen(field)
+		if fn == "" {
+			continue
+		}
 		bodyStmt = append(bodyStmt, &ast.ExprStmt{
 			X: &ast.CallExpr{
 				Fun: &ast.SelectorExpr{
 					X:   ast.NewIdent(opHandle),
-					Sel: ast.NewIdent(fmt.Sprintf("Set%s", utils.ToCamelCase(field.Name))),
+					Sel: ast.NewIdent(fmt.Sprintf("Set%s", fn)),
 				},
 				Args: []ast.Expr{&ast.SelectorExpr{
 					X:   ast.NewIdent("req"),

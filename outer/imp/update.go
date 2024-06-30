@@ -2,8 +2,10 @@ package imp
 
 import (
 	"fmt"
+	"github.com/stoewer/go-strcase"
 	"go/ast"
 	"go/token"
+	"strings"
 
 	"entgo.io/ent/entc/gen"
 	"github.com/liuchamp/elk/internal/consts"
@@ -60,6 +62,10 @@ func updateImp(n *gen.Type) *ast.FuncDecl {
 
 	// 设置数据
 	for _, field := range n.Fields {
+		fn := SetNameGen(field)
+		if fn == "" {
+			continue
+		}
 		bodyStmt = append(bodyStmt, &ast.ExprStmt{
 			X: &ast.CallExpr{
 				Fun: &ast.SelectorExpr{
@@ -141,4 +147,15 @@ func updateImp(n *gen.Type) *ast.FuncDecl {
 		List: bodyStmt,
 	}
 	return createMethod(mpsv, getImpStructName(n), consts.DefUpdateFuncName, createParams, createResults, createBody)
+}
+
+func SetNameGen(field *gen.Field) string {
+	if checkIgnoreSetField(field.Name) {
+		return ""
+	}
+	fn := strcase.UpperCamelCase(field.Name)
+	if strings.HasSuffix(fn, "_id") {
+		fn = fmt.Sprintf("%s%s", strcase.UpperCamelCase(strings.TrimSuffix(field.Name, "_id")), "ID")
+	}
+	return fn
 }
