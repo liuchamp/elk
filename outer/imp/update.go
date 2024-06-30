@@ -149,13 +149,18 @@ func updateImp(n *gen.Type) *ast.FuncDecl {
 	return createMethod(mpsv, getImpStructName(n), consts.DefUpdateFuncName, createParams, createResults, createBody)
 }
 
+var psFieldSuffixs = []string{"_id", "_ip"}
+
 func SetNameGen(field *gen.Field) string {
 	if checkIgnoreSetField(field.Name) {
 		return ""
 	}
 	fn := strcase.UpperCamelCase(field.Name)
-	if strings.HasSuffix(fn, "_id") {
-		fn = fmt.Sprintf("%s%s", strcase.UpperCamelCase(strings.TrimSuffix(field.Name, "_id")), "ID")
+	for _, suffix := range psFieldSuffixs {
+		if strings.HasSuffix(field.Name, suffix) {
+			fn = fmt.Sprintf("%s%s", strcase.UpperCamelCase(strings.TrimSuffix(field.Name, suffix)), strings.ToUpper(strings.TrimPrefix(suffix, "_")))
+			break
+		}
 	}
 	return fn
 }
