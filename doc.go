@@ -73,7 +73,7 @@ func initSpec() *openapi3.T {
 		Info: &openapi3.Info{
 			Title:          "Ent Schema API",
 			Description:    "This is an auto generated API description made out of an Ent schema definition",
-			Version:        "0.0.0",
+			Version:        "1.0.0",
 			Extensions:     nil,
 			TermsOfService: "",
 			Contact:        nil,

@@ -628,7 +628,7 @@ func errResponses(s *openapi3.T) error {
 		Value: &openapi3.Schema{Type: &openapi3.Types{openapi3.TypeInteger}},
 	}
 	notFdFs[normalFileMsg] = &openapi3.SchemaRef{
-		Value: &openapi3.Schema{Type: &openapi3.Types{openapi3.TypeInteger}},
+		Value: &openapi3.Schema{Type: &openapi3.Types{openapi3.TypeString}},
 	}
 	s.Components.Responses[NotFoundKey] = &openapi3.ResponseRef{
 		Value: openapi3.NewResponse().WithDescription("source not exists").WithContent(openapi3.NewContentWithJSONSchema(&openapi3.Schema{
